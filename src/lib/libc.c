@@ -7,9 +7,11 @@
 #include "api.h"
 
 # define _FMT_LL '\1'
-/* TODO: use n */
+
+/** Prints a formatted string to a (far) pointer, writing at most the specified number of bytes **/
 int _fsnprintf(char far * str, size_t n, const char far * fmt, ...)
 {
+	/* TODO: use n even when formatting arguments */
 	int i, len;
 	int fill;
 	int width;

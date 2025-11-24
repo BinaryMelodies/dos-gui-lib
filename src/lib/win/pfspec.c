@@ -9,19 +9,22 @@
 #include <string.h>
 #include <i86.h>
 
+// The window class name of all windows created by this library
+#define WINDOW_CLASS_NAME "GenericMainWindow"
+
+// SetTextAlign was introduced in Windows 2.0, so including it at compile time would break the code on Windows 1.x
+// Instead, we load the procedure once we have checked that the Windows version is recent enough
 #if __I86__ && WINDOWS_TARGET_VERSION < 2
 UINT (FAR PASCAL * _SetTextAlign)(HDC, UINT) = NULL;
 #endif
 
+// Common variables needed for the library
 HINSTANCE hInstance;
 HINSTANCE hPrevInstance;
 LPSTR lpCmdLine;
 int nCmdShow;
 
-#define WINDOW_CLASS_NAME "GenericMainWindow"
-
-int main(int argc, char ** argv);
-
+// The window procedure for all windows created by this library
 LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch(msg)
@@ -488,6 +491,7 @@ GuiKey_t gui_get_keycode(GuiKeyEvent_t event)
 		if((HIWORD(event.lParam) & KF_EXTENDED))
 			key = KeyRightAlt;
 		break;
+	// TODO: determine shift key
 	}
 	return key;
 }
@@ -617,6 +621,7 @@ void gui_write_text(GuiDrawContext_t draw_context, int x, int y, const char * te
 	SetBkMode(draw_context.hdc, previous_mode);
 }
 
+// Windows graphical applications must have a specific WinMain entry point (at least when compiled with the Watcom compiler)
 #if __I86__ || !__NT__
 int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 #else

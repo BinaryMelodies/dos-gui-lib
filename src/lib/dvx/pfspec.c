@@ -38,6 +38,7 @@ void gui_terminate(void)
 	xcb_disconnect(connection);
 }
 
+// common function, used for both dialog boxes and main windows
 static void _init_window(GuiWindow_t window, const char * window_title, int x, int y, int w, int h, uint32_t event_mask)
 {
 	uint32_t mask = 0;
@@ -127,6 +128,7 @@ typedef struct
 #define _TEXT_SKIP 5
 #define _BUTTON_SKIP 5
 
+// X11 offers no built-in dialogs, so we have to display our own
 int gui_message_box(const char * title, const char * message, GuiMessageBoxButtonSet_t buttons, int default_button, GuiMessageBoxIcon_t icon)
 {
 	int button_count;
@@ -464,6 +466,7 @@ static void _window_redraw(GuiWindow_t window)
 	}
 }
 
+// X11 keyboard events are always low level events, so we translate (TODO: could we use XIM?)
 static bool kbd_left_shift = false;
 static bool kbd_right_shift = false;
 static bool kbd_caps_lock = false;
@@ -495,7 +498,9 @@ static const char kbd_shifted[256] =
 	['`'] = '~',
 };
 
+// controls the gui_main_loop
 static bool gui_running;
+// the next two fields make a rough simulation of a double click
 static xcb_timestamp_t gui_last_button_click;
 static xcb_button_t gui_last_button = -1;
 

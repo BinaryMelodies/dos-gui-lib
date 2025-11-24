@@ -8,21 +8,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const GuiKey_t _key_map[] =
-{
-	[VK_LEFT] = KeyLeft,
-	[VK_RIGHT] = KeyRight,
-	[VK_UP] = KeyUp,
-	[VK_DOWN] = KeyDown,
-	[VK_PAGEUP] = KeyPageUp,
-	[VK_PAGEDOWN] = KeyPageDown,
-};
-
+// The window class name of all windows created by this library
 #define WINDOW_CLASS_NAME "GenericMainWindow"
 
+// Common variables needed for the library
 HAB hab;
 HMQ hmq;
 
+// OS/2 vertical coordinates start from the bottom instead of the top, so for consistency sake, we will need to flip these values
 static uint16_t fix_ycoord(HWND hwnd, uint16_t value)
 {
 	RECTL rcl;
@@ -30,6 +23,7 @@ static uint16_t fix_ycoord(HWND hwnd, uint16_t value)
 	return rcl.yTop - 1 - value;
 }
 
+// The window procedure for all windows created by this library
 MRESULT EXPENTRY ClientWindowProcedure(
 	HWND hwnd,
 #if __I86__
@@ -292,9 +286,10 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 	ULONG flags = FCF_TITLEBAR | FCF_SYSMENU | FCF_SIZEBORDER | FCF_MINMAX | FCF_SHELLPOSITION | FCF_TASKLIST;
 	bool query_window_pos = false;
 
-	// TODO: x, y, w, h
 	hwndFrame = WinCreateStdWindow(HWND_DESKTOP, WS_VISIBLE, &flags, WINDOW_CLASS_NAME, window_title, 0L, (HMODULE)0, 0, &hwndClient);
 	WinSendMsg(hwndFrame, WM_SETICON, (void *)WinQuerySysPointer(HWND_DESKTOP, SPTR_APPICON, FALSE), NULL);
+
+	// TODO: ideally this should take place in the WM_CREATE callback
 
 	flags = 0;
 
@@ -393,49 +388,11 @@ void gui_window_destroy(GuiWindow_t win)
 		));
 }
 
+// OS/2 virtual codes are useless for determining which key has been pressed, so we need to use the scancodes
+// This is also what SDL 1.2 does
+
 static const GuiKey_t virtual_codes[256] =
 {
-#if 0
-	[VK_BACKSPACE] = KeyBackspace,
-	[VK_TAB] = KeyTab,
-	[VK_BACKTAB] = KeyTab,
-	[VK_NEWLINE] = KeyEnter,
-	[VK_SHIFT] = KeyShift,
-	[VK_CTRL] = KeyControl,
-	[VK_ALT] = KeyAlt,
-	//[VK_ALTGRAF] = KeyRightAlt,
-	[VK_PAUSE] = KeyPause,
-	[VK_CAPSLOCK] = KeyCapsLock,
-	[VK_ESC] = KeyEscape,
-	[VK_SPACE] = ' ',
-	[VK_PAGEUP] = KeyPageUp,
-	[VK_PAGEDOWN] = KeyPageDown,
-	[VK_END] = KeyEnd,
-	[VK_HOME] = KeyHome,
-	[VK_LEFT] = KeyLeft,
-	[VK_UP] = KeyUp,
-	[VK_RIGHT] = KeyRight,
-	[VK_DOWN] = KeyDown,
-	[VK_PRINTSCRN] = KeyPrintScreen,
-	[VK_INSERT] = KeyInsert,
-	[VK_DELETE] = KeyDelete,
-	[VK_SCRLLOCK] = KeyScrollLock,
-	[VK_NUMLOCK] = KeyNumLock,
-	[VK_ENTER] = KeyNumEnter,
-	[VK_F1] = KeyF1,
-	[VK_F2] = KeyF2,
-	[VK_F3] = KeyF3,
-	[VK_F4] = KeyF4,
-	[VK_F5] = KeyF5,
-	[VK_F6] = KeyF6,
-	[VK_F7] = KeyF7,
-	[VK_F8] = KeyF8,
-	[VK_F9] = KeyF9,
-	[VK_F10] = KeyF10,
-	[VK_F11] = KeyF11,
-	[VK_F12] = KeyF12,
-	// OS/2 offers up to F24
-#endif
 	[1] = KeyEscape,
 	'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', KeyBackspace,
 	KeyTab, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', KeyEnter,
@@ -476,17 +433,6 @@ static const GuiKey_t virtual_codes[256] =
 GuiKey_t gui_get_keycode(GuiKeyEvent_t event)
 {
 	GuiKey_t key;
-#if 0
-	if(event.vkey >= 256)
-		return 0;
-	key = virtual_codes[event.vkey];
-	if(key == 0)
-	{
-		// TODO
-		return event.chr;
-	}
-	return key;
-#endif
 	if(!(event.fs & KC_SCANCODE))
 		return 0;
 	else
@@ -545,7 +491,7 @@ GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
 	RECTL rcl;
 
 	draw_context.hps = WinBeginPaint(window, (HPS)0, NULL);
-//	GpiErase(draw_context.hps); // TODO: is this important?
+//	GpiErase(draw_context.hps);
 
 	WinQueryWindowRect(window, &rcl);
 	draw_context.window_height = rcl.yTop;
