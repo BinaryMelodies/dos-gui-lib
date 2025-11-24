@@ -290,10 +290,82 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 	HWND hwndClient;
 
 	ULONG flags = FCF_TITLEBAR | FCF_SYSMENU | FCF_SIZEBORDER | FCF_MINMAX | FCF_SHELLPOSITION | FCF_TASKLIST;
+	bool query_window_pos = false;
 
 	// TODO: x, y, w, h
 	hwndFrame = WinCreateStdWindow(HWND_DESKTOP, WS_VISIBLE, &flags, WINDOW_CLASS_NAME, window_title, 0L, (HMODULE)0, 0, &hwndClient);
 	WinSendMsg(hwndFrame, WM_SETICON, (void *)WinQuerySysPointer(HWND_DESKTOP, SPTR_APPICON, FALSE), NULL);
+
+	flags = 0;
+
+	if(y != GUI_WINPOS_DEFAULT)
+	{
+		// y needs to be flipped
+		query_window_pos = true;
+	}
+
+	if(x != GUI_WINPOS_DEFAULT || y != GUI_WINPOS_DEFAULT)
+	{
+		flags |= SWP_MOVE;
+		if(x == GUI_WINPOS_DEFAULT || y == GUI_WINPOS_DEFAULT)
+		{
+			query_window_pos = true;
+		}
+	}
+
+	if(w != GUI_WINPOS_DEFAULT || h != GUI_WINPOS_DEFAULT)
+	{
+		flags |= SWP_SIZE;
+		if(w == GUI_WINPOS_DEFAULT || h == GUI_WINPOS_DEFAULT)
+		{
+			query_window_pos = true;
+		}
+	}
+
+	if(query_window_pos)
+	{
+		SWP swp;
+		if(WinQueryWindowPos(hwndFrame, &swp))
+		{
+			if((flags & SWP_SIZE))
+			{
+				if(w == GUI_WINPOS_DEFAULT)
+					w = swp.cx;
+				if(h == GUI_WINPOS_DEFAULT)
+					h = swp.cy;
+			}
+
+			if(y != GUI_WINPOS_DEFAULT)
+			{
+				// y must be flipped
+				SWP swpParent;
+				HWND hwndParent = (HWND)WinQueryWindow(hwndFrame, QW_PARENT
+#if __I86__
+					, FALSE
+#endif
+					);
+				if(WinQueryWindowPos(hwndParent, &swpParent))
+				{
+					y = swpParent.cy - h - y;
+				}
+			}
+
+			if((flags & SWP_MOVE))
+			{
+				if(x == GUI_WINPOS_DEFAULT)
+					x = swp.x;
+				if(y == GUI_WINPOS_DEFAULT)
+					y = swp.y;
+			}
+		}
+	}
+
+	// TODO: handle GUI_WINPOS_DEFAULT (if left over) and GUI_WINPOS_MAXIMUM
+
+	if(flags != 0)
+	{
+		WinSetWindowPos(hwndFrame, 0, x, y, w, h, flags);
+	}
 
 	return hwndClient;
 }
