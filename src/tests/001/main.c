@@ -174,32 +174,32 @@ static bool far _callback_text(GuiWindow_t window, size_t count, char far * text
 	_fsnprintf(message_buffer, sizeof message_buffer, "%.*Ws", (int)count, text);
 #elif __386__
 	_fsnprintf(message_buffer, sizeof message_buffer, "%.*s", (int)count, text);
-#endif*/
+#endif
 	gui_window_redraw(window);
 	return true;
 }
 
-static bool far _callback_buttonpress(GuiWindow_t window, GuiButtonEvent_t button_event)
+static bool far _callback_buttonpress(GuiWindow_t window, GuiMouseButtonEvent_t mouse_button_event)
 {
-	GuiPoint_t point = gui_get_button_coordinates(button_event);
-	GuiMouseButton_t buttons = gui_get_buttons(button_event);
-	_fsnprintf(message_buffer, sizeof message_buffer, "X (%d,%d): %X %s", point.x, point.y, buttons, gui_is_double_click(button_event) ? "D" : "S");
+	GuiPoint_t point = gui_get_mouse_button_coordinates(mouse_button_event);
+	GuiMouseButton_t buttons = gui_get_mouse_buttons(mouse_button_event);
+	_fsnprintf(message_buffer, sizeof message_buffer, "X (%d,%d): %X %s", point.x, point.y, buttons, gui_is_double_click(mouse_button_event) ? "D" : "S");
 	gui_window_redraw(window);
 	return true;
 }
 
-static bool far _callback_buttonrelease(GuiWindow_t window, GuiButtonEvent_t button_event)
+static bool far _callback_buttonrelease(GuiWindow_t window, GuiMouseButtonEvent_t mouse_button_event)
 {
-	GuiPoint_t point = gui_get_button_coordinates(button_event);
-	GuiMouseButton_t buttons = gui_get_buttons(button_event);
+	GuiPoint_t point = gui_get_mouse_button_coordinates(mouse_button_event);
+	GuiMouseButton_t buttons = gui_get_mouse_buttons(mouse_button_event);
 	_fsnprintf(message_buffer, sizeof message_buffer, "O (%d,%d): %X", point.x, point.y, buttons);
 	gui_window_redraw(window);
 	return true;
 }
 
-static bool far _callback_mousemove(GuiWindow_t window, GuiMouseEvent_t mouse_event)
+static bool far _callback_mousemove(GuiWindow_t window, GuiMouseMoveEvent_t mouse_move_event)
 {
-	GuiPoint_t point = gui_get_mouse_coordinates(mouse_event);
+	GuiPoint_t point = gui_get_mouse_move_coordinates(mouse_move_event);
 	_fsnprintf(message_buffer, sizeof message_buffer, "M (%d,%d)", point.x, point.y);
 	gui_window_redraw(window);
 	return true;
@@ -222,15 +222,15 @@ int gui_main(GuiMainParameters_t parameters)
 	" (32-bit)"
 # endif
 #endif
-	, "Greetings!", GUI_BUTTON(YES) | GUI_BUTTON(NO) | GUI_BUTTON(CANCEL) | GUI_BUTTON(HELP), GUI_BUTTON_NO, GUI_ICON_WARNING);
+	, "Greetings!", GUI_MSGBOX_BUTTON(YES) | GUI_MSGBOX_BUTTON(NO) | GUI_MSGBOX_BUTTON(CANCEL) | GUI_MSGBOX_BUTTON(HELP), GUI_MSGBOX_BUTTON_NO, GUI_MSGBOX_ICON_WARNING);
 
 	gui_register_callback_show(_callback_show);
-	gui_register_callback_keypress(_callback_keypress);
+	gui_register_callback_key_press(_callback_keypress);
 	gui_register_callback_text(_callback_text);
-	gui_observe_buttons(GUI_BUTTON_LEFT | GUI_BUTTON_RIGHT | GUI_BUTTON_MIDDLE, GUI_SINGLE_CLICK | GUI_DOUBLE_CLICK);
-//	gui_register_callback_buttonpress(_callback_buttonpress);
-//	gui_register_callback_buttonrelease(_callback_buttonrelease);
-//	gui_register_callback_mousemove(_callback_mousemove);
+	gui_observe_mouse_buttons(GUI_MOUSE_BUTTON_LEFT | GUI_MOUSE_BUTTON_RIGHT | GUI_MOUSE_BUTTON_MIDDLE, GUI_MOUSE_CLICK_SINGLE | GUI_MOUSE_CLICK_DOUBLE);
+//	gui_register_callback_mouse_button_press(_callback_buttonpress);
+//	gui_register_callback_mouse_button_release(_callback_buttonrelease);
+//	gui_register_callback_mouse_move(_callback_mousemove);
 
 	window = gui_window_create(WINDOW_TITLE, 10, 20, 300, 150);
 

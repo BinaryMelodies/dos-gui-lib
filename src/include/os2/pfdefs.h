@@ -21,9 +21,9 @@ typedef struct
 	MSEMSG msg;
 	GuiMouseButton_t button;
 	bool double_click;
-} GuiButtonEvent_t;
+} GuiMouseButtonEvent_t;
 
-typedef MSEMSG GuiMouseEvent_t;
+typedef MSEMSG GuiMouseMoveEvent_t;
 
 typedef struct
 {

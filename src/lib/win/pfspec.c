@@ -2,6 +2,7 @@
 /* Implementation for Microsoft Windows */
 
 #include "api.h"
+#define _COMPILE_LIBRARY
 #include "internal.h"
 
 #include <stdlib.h>
@@ -30,7 +31,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			GuiKeyEvent_t event;
 			event.wParam = wParam;
 			event.lParam = lParam;
-			if(callback_keypress && callback_keypress(hWnd, event))
+			if(callback_key_press && callback_key_press(hWnd, event))
 				return 0;
 		}
 		break;
@@ -47,56 +48,56 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			GuiKeyEvent_t event;
 			event.wParam = wParam;
 			event.lParam = lParam;
-			if(callback_keyrelease && callback_keyrelease(hWnd, event))
+			if(callback_key_release && callback_key_release(hWnd, event))
 				return 0;
 		}
 		break;
 	case WM_LBUTTONDOWN: // TODO: only the selected buttons
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:
-		if(callback_buttonpress)
+		if(callback_mouse_button_press)
 		{
-			GuiButtonEvent_t event;
+			GuiMouseButtonEvent_t event;
 			event.wParam = wParam;
 			event.lParam = lParam;
 			event.double_click = false;
-			if(callback_buttonpress(hWnd, event))
+			if(callback_mouse_button_press(hWnd, event))
 				return 0;
 		}
 		break;
 	case WM_LBUTTONDBLCLK:
 	case WM_MBUTTONDBLCLK:
 	case WM_RBUTTONDBLCLK:
-		if(callback_buttonpress)
+		if(callback_mouse_button_press)
 		{
-			GuiButtonEvent_t event;
+			GuiMouseButtonEvent_t event;
 			event.wParam = wParam;
 			event.lParam = lParam;
 			event.double_click = true;
-			if(callback_buttonpress(hWnd, event))
+			if(callback_mouse_button_press(hWnd, event))
 				return 0;
 		}
 		break;
 	case WM_LBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP:
-		if(callback_buttonrelease)
+		if(callback_mouse_button_release)
 		{
-			GuiButtonEvent_t event;
+			GuiMouseButtonEvent_t event;
 			event.wParam = wParam;
 			event.lParam = lParam;
 			event.double_click = false;
-			if(callback_buttonrelease(hWnd, event))
+			if(callback_mouse_button_release(hWnd, event))
 				return 0;
 		}
 		break;
 	case WM_MOUSEMOVE:
-		if(callback_mousemove)
+		if(callback_mouse_move)
 		{
-			GuiMouseEvent_t event;
+			GuiMouseMoveEvent_t event;
 			event.wParam = wParam;
 			event.lParam = lParam;
-			if(callback_mousemove(hWnd, event))
+			if(callback_mouse_move(hWnd, event))
 				return 0;
 		}
 		break;
@@ -157,123 +158,123 @@ void gui_terminate(void)
 {
 }
 
-int gui_message_box(const char * title, const char * message, int buttons, int default_button, GuiMessageBoxIcon_t icon)
+int gui_message_box(const char * title, const char * message, GuiMessageBoxButtonSet_t buttons, int default_button, GuiMessageBoxIcon_t icon)
 {
 	UINT type;
 	int result;
 
-	if((buttons & GUI_BUTTON(ABORT)) || (buttons & GUI_BUTTON(IGNORE)))
+	if((buttons & GUI_MSGBOX_BUTTON(ABORT)) || (buttons & GUI_MSGBOX_BUTTON(IGNORE)))
 	{
 		type = MB_ABORTRETRYIGNORE;
 		switch(default_button)
 		{
-		case GUI_BUTTON_ABORT:
+		case GUI_MSGBOX_BUTTON_ABORT:
 			type |= MB_DEFBUTTON1;
 			break;
-		case GUI_BUTTON_RETRY:
+		case GUI_MSGBOX_BUTTON_RETRY:
 			type |= MB_DEFBUTTON2;
 			break;
-		case GUI_BUTTON_IGNORE:
+		case GUI_MSGBOX_BUTTON_IGNORE:
 			type |= MB_DEFBUTTON3;
 			break;
 #if __NT__
-		case GUI_BUTTON_HELP:
-			if((buttons & GUI_BUTTON(HELP)))
+		case GUI_MSGBOX_BUTTON_HELP:
+			if((buttons & GUI_MSGBOX_BUTTON(HELP)))
 				type |= MB_DEFBUTTON4;
 #endif
 			break;
 		}
 	}
-	else if((buttons & GUI_BUTTON(RETRY)))
+	else if((buttons & GUI_MSGBOX_BUTTON(RETRY)))
 	{
 		type = MB_RETRYCANCEL;
 		switch(default_button)
 		{
-		case GUI_BUTTON_RETRY:
+		case GUI_MSGBOX_BUTTON_RETRY:
 			type |= MB_DEFBUTTON1;
 			break;
-		case GUI_BUTTON_CANCEL:
+		case GUI_MSGBOX_BUTTON_CANCEL:
 			type |= MB_DEFBUTTON2;
 			break;
 #if __NT__
-		case GUI_BUTTON_HELP:
-			if((buttons & GUI_BUTTON(HELP)))
+		case GUI_MSGBOX_BUTTON_HELP:
+			if((buttons & GUI_MSGBOX_BUTTON(HELP)))
 				type |= MB_DEFBUTTON3;
 			break;
 #endif
 		}
 	}
-	else if((buttons & GUI_BUTTON(YES)) || (buttons & GUI_BUTTON(NO)))
+	else if((buttons & GUI_MSGBOX_BUTTON(YES)) || (buttons & GUI_MSGBOX_BUTTON(NO)))
 	{
-		if((buttons & GUI_BUTTON(CANCEL)))
+		if((buttons & GUI_MSGBOX_BUTTON(CANCEL)))
 			type = MB_YESNOCANCEL;
 		else
 			type = MB_YESNO;
 
 		switch(default_button)
 		{
-		case GUI_BUTTON_YES:
+		case GUI_MSGBOX_BUTTON_YES:
 			type |= MB_DEFBUTTON1;
 			break;
-		case GUI_BUTTON_NO:
+		case GUI_MSGBOX_BUTTON_NO:
 			type |= MB_DEFBUTTON2;
 			break;
-		case GUI_BUTTON_CANCEL:
-			if((buttons & GUI_BUTTON(CANCEL)))
+		case GUI_MSGBOX_BUTTON_CANCEL:
+			if((buttons & GUI_MSGBOX_BUTTON(CANCEL)))
 				type |= MB_DEFBUTTON3;
 			break;
 #if __NT__
-		case GUI_BUTTON_HELP:
-			if((buttons & GUI_BUTTON(HELP)))
-				type |= buttons & GUI_BUTTON(CANCEL) ? MB_DEFBUTTON4 : MB_DEFBUTTON3;
+		case GUI_MSGBOX_BUTTON_HELP:
+			if((buttons & GUI_MSGBOX_BUTTON(HELP)))
+				type |= buttons & GUI_MSGBOX_BUTTON(CANCEL) ? MB_DEFBUTTON4 : MB_DEFBUTTON3;
 			break;
 #endif
 		}
 	}
 	else
 	{
-		if((buttons & GUI_BUTTON(CANCEL)))
+		if((buttons & GUI_MSGBOX_BUTTON(CANCEL)))
 			type = MB_OKCANCEL;
 		else
 			type = MB_OK;
 
 		switch(default_button)
 		{
-		case GUI_BUTTON_OK:
+		case GUI_MSGBOX_BUTTON_OK:
 			type |= MB_DEFBUTTON1;
 			break;
-		case GUI_BUTTON_CANCEL:
-			if((buttons & GUI_BUTTON(CANCEL)))
+		case GUI_MSGBOX_BUTTON_CANCEL:
+			if((buttons & GUI_MSGBOX_BUTTON(CANCEL)))
 				type |= MB_DEFBUTTON2;
 			break;
 #if __NT__
-		case GUI_BUTTON_HELP:
-			if((buttons & GUI_BUTTON(HELP)))
-				type |= buttons & GUI_BUTTON(CANCEL) ? MB_DEFBUTTON3 : MB_DEFBUTTON2;
+		case GUI_MSGBOX_BUTTON_HELP:
+			if((buttons & GUI_MSGBOX_BUTTON(HELP)))
+				type |= buttons & GUI_MSGBOX_BUTTON(CANCEL) ? MB_DEFBUTTON3 : MB_DEFBUTTON2;
 			break;
 #endif
 		}
 	}
 
 #if __NT__
-	if((buttons & GUI_BUTTON(HELP)))
+	if((buttons & GUI_MSGBOX_BUTTON(HELP)))
 		type |= MB_HELP;
 #endif
 
 	switch(icon)
 	{
-	case GUI_ICON_NONE:
+	case GUI_MSGBOX_ICON_NONE:
 		break;
-	case GUI_ICON_WARNING:
+	case GUI_MSGBOX_ICON_WARNING:
 		type |= MB_ICONEXCLAMATION;
 		break;
-	case GUI_ICON_QUESTION:
+	case GUI_MSGBOX_ICON_QUESTION:
 		type |= MB_ICONQUESTION;
 		break;
-	case GUI_ICON_STOP:
+	case GUI_MSGBOX_ICON_STOP:
 		type |= MB_ICONSTOP;
 		break;
-	case GUI_ICON_INFORMATION:
+	case GUI_MSGBOX_ICON_INFORMATION:
 		type |= MB_ICONINFORMATION;
 		break;
 	}
@@ -283,25 +284,25 @@ int gui_message_box(const char * title, const char * message, int buttons, int d
 	switch(result)
 	{
 	case IDOK:
-		result = GUI_BUTTON_OK;
+		result = GUI_MSGBOX_BUTTON_OK;
 		break;
 	case IDCANCEL:
-		result = GUI_BUTTON_CANCEL;
+		result = GUI_MSGBOX_BUTTON_CANCEL;
 		break;
 	case IDABORT:
-		result = GUI_BUTTON_ABORT;
+		result = GUI_MSGBOX_BUTTON_ABORT;
 		break;
 	case IDRETRY:
-		result = GUI_BUTTON_RETRY;
+		result = GUI_MSGBOX_BUTTON_RETRY;
 		break;
 	case IDIGNORE:
-		result = GUI_BUTTON_IGNORE;
+		result = GUI_MSGBOX_BUTTON_IGNORE;
 		break;
 	case IDYES:
-		result = GUI_BUTTON_YES;
+		result = GUI_MSGBOX_BUTTON_YES;
 		break;
 	case IDNO:
-		result = GUI_BUTTON_NO;
+		result = GUI_MSGBOX_BUTTON_NO;
 		break;
 	default:
 		result = -1;
@@ -314,6 +315,26 @@ int gui_message_box(const char * title, const char * message, int buttons, int d
 GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h)
 {
 	HWND hWnd;
+
+	if(x == GUI_WINPOS_DEFAULT)
+		x = CW_USEDEFAULT;
+	else if(x == GUI_WINPOS_MAXIMUM)
+		x = 0; // TODO
+
+	if(y == GUI_WINPOS_DEFAULT)
+		y = CW_USEDEFAULT;
+	else if(y == GUI_WINPOS_MAXIMUM)
+		y = 0; // TODO
+
+	if(w == GUI_WINPOS_DEFAULT)
+		w = CW_USEDEFAULT;
+	else if(w == GUI_WINPOS_MAXIMUM)
+		w = 320; // TODO: set to screen width
+
+	if(h == GUI_WINPOS_DEFAULT)
+		h = CW_USEDEFAULT;
+	else if(h == GUI_WINPOS_MAXIMUM)
+		h = 200; // TODO: set to screen height
 
 	hWnd = CreateWindow(WINDOW_CLASS_NAME, window_title, WS_OVERLAPPEDWINDOW,
 		x, y, w, h, NULL, NULL, hInstance, NULL);
@@ -471,7 +492,7 @@ GuiKey_t gui_get_keycode(GuiKeyEvent_t event)
 	return key;
 }
 
-GuiPoint_t gui_get_button_coordinates(GuiButtonEvent_t event)
+GuiPoint_t gui_get_mouse_button_coordinates(GuiMouseButtonEvent_t event)
 {
 	GuiPoint_t point;
 	point.x = LOWORD(event.lParam);
@@ -479,24 +500,24 @@ GuiPoint_t gui_get_button_coordinates(GuiButtonEvent_t event)
 	return point;
 }
 
-GuiMouseButton_t gui_get_buttons(GuiButtonEvent_t event)
+GuiMouseButton_t gui_get_mouse_buttons(GuiMouseButtonEvent_t event)
 {
 	GuiMouseButton_t buttons = 0;
 	if(event.wParam & MK_LBUTTON)
-		buttons |= GUI_BUTTON_LEFT;
+		buttons |= GUI_MOUSE_BUTTON_LEFT;
 	if(event.wParam & MK_RBUTTON)
-		buttons |= GUI_BUTTON_RIGHT;
+		buttons |= GUI_MOUSE_BUTTON_RIGHT;
 	if(event.wParam & MK_MBUTTON)
-		buttons |= GUI_BUTTON_MIDDLE;
+		buttons |= GUI_MOUSE_BUTTON_MIDDLE;
 	return buttons;
 }
 
-GuiMouseButton_t gui_is_double_click(GuiButtonEvent_t event)
+GuiMouseButton_t gui_is_double_click(GuiMouseButtonEvent_t event)
 {
 	return event.double_click;
 }
 
-GuiPoint_t gui_get_mouse_coordinates(GuiMouseEvent_t event)
+GuiPoint_t gui_get_mouse_move_coordinates(GuiMouseMoveEvent_t event)
 {
 	GuiPoint_t point;
 	point.x = LOWORD(event.lParam);

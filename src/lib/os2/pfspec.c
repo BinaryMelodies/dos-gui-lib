@@ -2,6 +2,7 @@
 /* Implementation for IBM OS/2 */
 
 #include "api.h"
+#define _COMPILE_LIBRARY
 #include "internal.h"
 
 #include <stdlib.h>
@@ -46,14 +47,14 @@ MRESULT EXPENTRY ClientWindowProcedure(
 		{
 			if((CHARMSG(&msg)->fs & KC_SCANCODE))
 			{
-				if(callback_keyrelease && callback_keyrelease(hwnd, *CHARMSG(&msg)))
+				if(callback_key_release && callback_key_release(hwnd, *CHARMSG(&msg)))
 					return 0;
 			}
 		}
 		else
 		{
 			bool handled = false;
-			if((CHARMSG(&msg)->fs & KC_SCANCODE) && callback_keypress && callback_keypress(hwnd, *CHARMSG(&msg)))
+			if((CHARMSG(&msg)->fs & KC_SCANCODE) && callback_key_press && callback_key_press(hwnd, *CHARMSG(&msg)))
 				handled = true;
 			if(callback_text && (CHARMSG(&msg)->fs & KC_CHAR) != 0)
 			{
@@ -68,51 +69,51 @@ MRESULT EXPENTRY ClientWindowProcedure(
 	case WM_BUTTON1DOWN:
 	case WM_BUTTON2DOWN:
 	case WM_BUTTON3DOWN:
-		if(callback_buttonpress)
+		if(callback_mouse_button_press)
 		{
-			GuiButtonEvent_t event;
+			GuiMouseButtonEvent_t event;
 			event.msg = *MOUSEMSG(&msg);
 			event.msg.y = fix_ycoord(hwnd, event.msg.y);
-			event.button = msg == WM_BUTTON1DOWN ? GUI_BUTTON_LEFT : msg == WM_BUTTON2DOWN ? GUI_BUTTON_MIDDLE : GUI_BUTTON_RIGHT;
+			event.button = msg == WM_BUTTON1DOWN ? GUI_MOUSE_BUTTON_LEFT : msg == WM_BUTTON2DOWN ? GUI_MOUSE_BUTTON_MIDDLE : GUI_MOUSE_BUTTON_RIGHT;
 			event.double_click = false;
-			if(callback_buttonpress(hwnd, event))
+			if(callback_mouse_button_press(hwnd, event))
 				return 0;
 		}
 		break;
 	case WM_BUTTON1DBLCLK:
 	case WM_BUTTON2DBLCLK:
 	case WM_BUTTON3DBLCLK:
-		if(callback_buttonpress)
+		if(callback_mouse_button_press)
 		{
-			GuiButtonEvent_t event;
+			GuiMouseButtonEvent_t event;
 			event.msg = *MOUSEMSG(&msg);
 			event.msg.y = fix_ycoord(hwnd, event.msg.y);
-			event.button = msg == WM_BUTTON1DBLCLK ? GUI_BUTTON_LEFT : msg == WM_BUTTON2DBLCLK ? GUI_BUTTON_MIDDLE : GUI_BUTTON_RIGHT;
+			event.button = msg == WM_BUTTON1DBLCLK ? GUI_MOUSE_BUTTON_LEFT : msg == WM_BUTTON2DBLCLK ? GUI_MOUSE_BUTTON_MIDDLE : GUI_MOUSE_BUTTON_RIGHT;
 			event.double_click = true;
-			if(callback_buttonpress(hwnd, event))
+			if(callback_mouse_button_press(hwnd, event))
 				return 0;
 		}
 		break;
 	case WM_BUTTON1UP:
 	case WM_BUTTON2UP:
 	case WM_BUTTON3UP:
-		if(callback_buttonrelease)
+		if(callback_mouse_button_release)
 		{
-			GuiButtonEvent_t event;
+			GuiMouseButtonEvent_t event;
 			event.msg = *MOUSEMSG(&msg);
 			event.msg.y = fix_ycoord(hwnd, event.msg.y);
-			event.button = msg == WM_BUTTON1UP ? GUI_BUTTON_LEFT : msg == WM_BUTTON2UP ? GUI_BUTTON_MIDDLE : GUI_BUTTON_RIGHT;
+			event.button = msg == WM_BUTTON1UP ? GUI_MOUSE_BUTTON_LEFT : msg == WM_BUTTON2UP ? GUI_MOUSE_BUTTON_MIDDLE : GUI_MOUSE_BUTTON_RIGHT;
 			event.double_click = false;
-			if(callback_buttonrelease(hwnd, event))
+			if(callback_mouse_button_release(hwnd, event))
 				return 0;
 		}
 		break;
 	case WM_MOUSEMOVE:
-		if(callback_mousemove)
+		if(callback_mouse_move)
 		{
-			GuiMouseEvent_t event = *MOUSEMSG(&msg);
+			GuiMouseMoveEvent_t event = *MOUSEMSG(&msg);
 			event.y = fix_ycoord(hwnd, event.y);
-			if(callback_mousemove(hwnd, event))
+			if(callback_mouse_move(hwnd, event))
 				return 0;
 		}
 		break;
@@ -151,7 +152,7 @@ void gui_terminate(void)
 	WinTerminate(hab);
 }
 
-int gui_message_box(const char * title, const char * message, int buttons, int default_button, GuiMessageBoxIcon_t icon)
+int gui_message_box(const char * title, const char * message, GuiMessageBoxButtonSet_t buttons, int default_button, GuiMessageBoxIcon_t icon)
 {
 #if __I86__
 	UINT type;
@@ -160,92 +161,92 @@ int gui_message_box(const char * title, const char * message, int buttons, int d
 #endif
 	int result;
 
-	if((buttons & GUI_BUTTON(ABORT)) || (buttons & GUI_BUTTON(IGNORE)))
+	if((buttons & GUI_MSGBOX_BUTTON(ABORT)) || (buttons & GUI_MSGBOX_BUTTON(IGNORE)))
 	{
 		type = MB_ABORTRETRYIGNORE;
 		switch(default_button)
 		{
-		case GUI_BUTTON_ABORT:
+		case GUI_MSGBOX_BUTTON_ABORT:
 			type |= MB_DEFBUTTON1;
 			break;
-		case GUI_BUTTON_RETRY:
+		case GUI_MSGBOX_BUTTON_RETRY:
 			type |= MB_DEFBUTTON2;
 			break;
-		case GUI_BUTTON_IGNORE:
+		case GUI_MSGBOX_BUTTON_IGNORE:
 			type |= MB_DEFBUTTON3;
 			break;
 		}
 	}
-	else if((buttons & GUI_BUTTON(RETRY)))
+	else if((buttons & GUI_MSGBOX_BUTTON(RETRY)))
 	{
 		type = MB_RETRYCANCEL;
 		switch(default_button)
 		{
-		case GUI_BUTTON_RETRY:
+		case GUI_MSGBOX_BUTTON_RETRY:
 			type |= MB_DEFBUTTON1;
 			break;
-		case GUI_BUTTON_CANCEL:
+		case GUI_MSGBOX_BUTTON_CANCEL:
 			type |= MB_DEFBUTTON2;
 			break;
 		}
 	}
-	else if((buttons & GUI_BUTTON(YES)) || (buttons & GUI_BUTTON(NO)))
+	else if((buttons & GUI_MSGBOX_BUTTON(YES)) || (buttons & GUI_MSGBOX_BUTTON(NO)))
 	{
-		if((buttons & GUI_BUTTON(CANCEL)))
+		if((buttons & GUI_MSGBOX_BUTTON(CANCEL)))
 			type = MB_YESNOCANCEL;
 		else
 			type = MB_YESNO;
 
 		switch(default_button)
 		{
-		case GUI_BUTTON_YES:
+		case GUI_MSGBOX_BUTTON_YES:
 			type |= MB_DEFBUTTON1;
 			break;
-		case GUI_BUTTON_NO:
+		case GUI_MSGBOX_BUTTON_NO:
 			type |= MB_DEFBUTTON2;
 			break;
-		case GUI_BUTTON_CANCEL:
-			if((buttons & GUI_BUTTON(CANCEL)))
+		case GUI_MSGBOX_BUTTON_CANCEL:
+			if((buttons & GUI_MSGBOX_BUTTON(CANCEL)))
 				type |= MB_DEFBUTTON3;
 			break;
 		}
 	}
 	else
 	{
-		if((buttons & GUI_BUTTON(CANCEL)))
+		if((buttons & GUI_MSGBOX_BUTTON(CANCEL)))
 			type = MB_OKCANCEL;
 		else
 			type = MB_OK;
 
 		switch(default_button)
 		{
-		case GUI_BUTTON_OK:
+		case GUI_MSGBOX_BUTTON_OK:
 			type |= MB_DEFBUTTON1;
 			break;
-		case GUI_BUTTON_CANCEL:
-			if((buttons & GUI_BUTTON(CANCEL)))
+		case GUI_MSGBOX_BUTTON_CANCEL:
+			if((buttons & GUI_MSGBOX_BUTTON(CANCEL)))
 				type |= MB_DEFBUTTON2;
 			break;
 		}
 	}
 
-	if((buttons & GUI_BUTTON(HELP)))
+	if((buttons & GUI_MSGBOX_BUTTON(HELP)))
 		type |= MB_HELP;
 
 	switch(icon)
 	{
-	case GUI_ICON_NONE:
+	case GUI_MSGBOX_ICON_NONE:
 		break;
-	case GUI_ICON_WARNING:
+	case GUI_MSGBOX_ICON_WARNING:
 		type |= MB_WARNING;
 		break;
-	case GUI_ICON_QUESTION:
+	case GUI_MSGBOX_ICON_QUESTION:
 		type |= MB_QUERY;
 		break;
-	case GUI_ICON_STOP:
+	case GUI_MSGBOX_ICON_STOP:
 		type |= MB_CRITICAL;
 		break;
-	case GUI_ICON_INFORMATION:
+	case GUI_MSGBOX_ICON_INFORMATION:
 		type |= MB_INFORMATION;
 		break;
 	}
@@ -255,25 +256,25 @@ int gui_message_box(const char * title, const char * message, int buttons, int d
 	switch(result)
 	{
 	case MBID_OK:
-		result = GUI_BUTTON_OK;
+		result = GUI_MSGBOX_BUTTON_OK;
 		break;
 	case MBID_CANCEL:
-		result = GUI_BUTTON_CANCEL;
+		result = GUI_MSGBOX_BUTTON_CANCEL;
 		break;
 	case MBID_ABORT:
-		result = GUI_BUTTON_ABORT;
+		result = GUI_MSGBOX_BUTTON_ABORT;
 		break;
 	case MBID_RETRY:
-		result = GUI_BUTTON_RETRY;
+		result = GUI_MSGBOX_BUTTON_RETRY;
 		break;
 	case MBID_IGNORE:
-		result = GUI_BUTTON_IGNORE;
+		result = GUI_MSGBOX_BUTTON_IGNORE;
 		break;
 	case MBID_YES:
-		result = GUI_BUTTON_YES;
+		result = GUI_MSGBOX_BUTTON_YES;
 		break;
 	case MBID_NO:
-		result = GUI_BUTTON_NO;
+		result = GUI_MSGBOX_BUTTON_NO;
 		break;
 	default:
 		result = -1;
@@ -290,6 +291,7 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 
 	ULONG flags = FCF_TITLEBAR | FCF_SYSMENU | FCF_SIZEBORDER | FCF_MINMAX | FCF_SHELLPOSITION | FCF_TASKLIST;
 
+	// TODO: x, y, w, h
 	hwndFrame = WinCreateStdWindow(HWND_DESKTOP, WS_VISIBLE, &flags, WINDOW_CLASS_NAME, window_title, 0L, (HMODULE)0, 0, &hwndClient);
 	WinSendMsg(hwndFrame, WM_SETICON, (void *)WinQuerySysPointer(HWND_DESKTOP, SPTR_APPICON, FALSE), NULL);
 
@@ -419,7 +421,7 @@ GuiKey_t gui_get_keycode(GuiKeyEvent_t event)
 		return virtual_codes[event.scancode];
 }
 
-GuiPoint_t gui_get_button_coordinates(GuiButtonEvent_t event)
+GuiPoint_t gui_get_mouse_button_coordinates(GuiMouseButtonEvent_t event)
 {
 	GuiPoint_t point;
 	point.x = event.msg.x;
@@ -427,17 +429,17 @@ GuiPoint_t gui_get_button_coordinates(GuiButtonEvent_t event)
 	return point;
 }
 
-GuiMouseButton_t gui_get_buttons(GuiButtonEvent_t event)
+GuiMouseButton_t gui_get_mouse_buttons(GuiMouseButtonEvent_t event)
 {
 	return event.button;
 }
 
-GuiMouseButton_t gui_is_double_click(GuiButtonEvent_t event)
+GuiMouseButton_t gui_is_double_click(GuiMouseButtonEvent_t event)
 {
 	return event.double_click;
 }
 
-GuiPoint_t gui_get_mouse_coordinates(GuiMouseEvent_t event)
+GuiPoint_t gui_get_mouse_move_coordinates(GuiMouseMoveEvent_t event)
 {
 	GuiPoint_t point;
 	point.x = event.x;

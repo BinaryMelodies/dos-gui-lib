@@ -17,12 +17,12 @@ typedef struct
 typedef struct
 {
 	UWORD mouse_x, mouse_y, mouse_buttons, click_count, keystate;
-} GuiButtonEvent_t;
+} GuiMouseButtonEvent_t;
 
 typedef struct
 {
 	UWORD mouse_x, mouse_y, mouse_buttons, click_count, keystate;
-} GuiMouseEvent_t;
+} GuiMouseMoveEvent_t;
 
 typedef struct
 {

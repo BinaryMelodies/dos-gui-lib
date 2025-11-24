@@ -2,6 +2,7 @@
 /* Implementation for Digital Research GEM */
 
 #include "api.h"
+#define _COMPILE_LIBRARY
 #include "internal.h"
 
 #include <stdbool.h>
@@ -59,7 +60,7 @@ int gui_main_loop(void)
 		WORD x, y;
 		WORD which;
 
-		if(callback_mousemove != NULL)
+		if(callback_mouse_move != NULL)
 		{
 			if(!gui_mouse_position_known)
 			{
@@ -75,14 +76,14 @@ int gui_main_loop(void)
 		}
 
 		which = evnt_multi(MU_MESAG
-				| (callback_keypress ? MU_KEYBD : 0)
-				| (callback_buttonpress || callback_buttonrelease ? MU_BUTTON : 0)
-				| (callback_mousemove ? MU_M1 : 0),
+				| (callback_key_press ? MU_KEYBD : 0)
+				| (callback_mouse_button_press || callback_mouse_button_release ? MU_BUTTON : 0)
+				| (callback_mouse_move ? MU_M1 : 0),
 			// button
-			callback_clickcount_mask & GUI_DOUBLE_CLICK ? 2 : 1,
+			callback_click_count_mask & GUI_MOUSE_CLICK_DOUBLE ? 2 : 1,
 				// we can only check for a single mouse button
-			callback_buttons_mask & GUI_BUTTON_LEFT ? 1 : callback_buttons_mask & GUI_BUTTON_RIGHT ? 2 : 4,
-			gui_last_button_state ? 0 : callback_buttons_mask & GUI_BUTTON_LEFT ? 1 : callback_buttons_mask & GUI_BUTTON_RIGHT ? 2 : 4,
+			callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_LEFT ? 1 : callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_RIGHT ? 2 : 4,
+			gui_last_button_state ? 0 : callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_LEFT ? 1 : callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_RIGHT ? 2 : 4,
 			// mouse
 			1, x, y, 1, 1,
 			0, 0, 0, 0, 0,
@@ -130,12 +131,12 @@ int gui_main_loop(void)
 		if((which & MU_KEYBD) != 0)
 		{
 			// TODO: key releases are not supported
-			if(callback_keypress)
+			if(callback_key_press)
 			{
 				GuiKeyEvent_t event;
 				event.keycode = keycode;
 				event.keystate = keystate;
-				callback_keypress(msg[3], event);
+				callback_key_press(msg[3], event);
 			}
 			if(callback_text)
 			{
@@ -156,45 +157,45 @@ int gui_main_loop(void)
 
 		if((which & MU_BUTTON) != 0)
 		{
-			GuiButtonEvent_t event;
+			GuiMouseButtonEvent_t event;
 			event.mouse_x = mouse_x;
 			event.mouse_y = mouse_y;
 			//event.mouse_buttons = mouse_buttons; // TODO: does not work
-			event.mouse_buttons = callback_buttons_mask & GUI_BUTTON_LEFT ? GUI_BUTTON_LEFT : callback_buttons_mask & GUI_BUTTON_RIGHT ? GUI_BUTTON_RIGHT : GUI_BUTTON_MIDDLE;
+			event.mouse_buttons = callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_LEFT ? GUI_MOUSE_BUTTON_LEFT : callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_RIGHT ? GUI_MOUSE_BUTTON_RIGHT : GUI_MOUSE_BUTTON_MIDDLE;
 			event.click_count = click_count;
 			event.keystate = keystate;
 			if(gui_last_button_state)
 			{
-				if(callback_buttonrelease)
+				if(callback_mouse_button_release)
 				{
-					callback_buttonrelease(msg[3], event);
+					callback_mouse_button_release(msg[3], event);
 				}
 			}
 			else
 			{
-				if(callback_buttonpress)
+				if(callback_mouse_button_press)
 				{
-					if((click_count == 1 && (callback_clickcount_mask & GUI_SINGLE_CLICK) != 0)
-					|| (click_count == 2 && (callback_clickcount_mask & GUI_DOUBLE_CLICK) != 0))
+					if((click_count == 1 && (callback_click_count_mask & GUI_MOUSE_CLICK_SINGLE) != 0)
+					|| (click_count == 2 && (callback_click_count_mask & GUI_MOUSE_CLICK_DOUBLE) != 0))
 					{
-						callback_buttonpress(msg[3], event);
+						callback_mouse_button_press(msg[3], event);
 					}
 				}
 			}
 			gui_last_button_state ^= true;
 		}
 
-		if((which & MU_M1) != 0 && callback_mousemove)
+		if((which & MU_M1) != 0 && callback_mouse_move)
 		{
-			GuiMouseEvent_t event;
+			GuiMouseMoveEvent_t event;
 
 			event.mouse_x = mouse_x;
 			event.mouse_y = mouse_y;
 			event.mouse_buttons = mouse_buttons; // TODO: does not work
-			//event.mouse_buttons = callback_buttons_mask & GUI_BUTTON_LEFT ? GUI_BUTTON_LEFT : callback_buttons_mask & GUI_BUTTON_RIGHT ? GUI_BUTTON_RIGHT : GUI_BUTTON_MIDDLE;
+			//event.mouse_buttons = callback_buttons_mask & GUI_MOUSE_BUTTON_LEFT ? GUI_MOUSE_BUTTON_LEFT : callback_buttons_mask & GUI_MOUSE_BUTTON_RIGHT ? GUI_MOUSE_BUTTON_RIGHT : GUI_MOUSE_BUTTON_MIDDLE;
 			event.keystate = keystate;
 
-			callback_mousemove(msg[3], event);
+			callback_mouse_move(msg[3], event);
 		}
 	}
 
@@ -217,7 +218,7 @@ void gui_terminate_main_loop(void)
 #define _MAX_BUTTONS 8
 #define _MAX_BUTTONS_TEMPLATE (sizeof _BUTTON_OK _BUTTON_YES _BUTTON_NO _BUTTON_ABORT _BUTTON_RETRY _BUTTON_IGNORE _BUTTON_CANCEL _BUTTON_HELP + 2 + _MAX_BUTTONS)
 
-int gui_message_box(const char * title, const char * message, int buttons, int default_button, GuiMessageBoxIcon_t icon)
+int gui_message_box(const char * title, const char * message, GuiMessageBoxButtonSet_t buttons, int default_button, GuiMessageBoxIcon_t icon)
 {
 	char buttons_template[_MAX_BUTTONS_TEMPLATE];
 	int button_mapping[_MAX_BUTTONS+1];
@@ -234,15 +235,15 @@ int gui_message_box(const char * title, const char * message, int buttons, int d
 	memset(button_mapping, -1, sizeof button_mapping);
 
 #define _CHECK_BUTTON(__button) \
-	if((buttons & GUI_BUTTON(__button)) && button_count < 3) \
+	if((buttons & GUI_MSGBOX_BUTTON(__button)) && button_count < 3) \
 	{ \
 		if(buttons_template[0] == 0) \
 			strcpy(buttons_template, "["); \
 		else \
 			strcat(buttons_template, "|"); \
 		strcat(buttons_template, _BUTTON_##__button); \
-		button_mapping[button_count ++] = GUI_BUTTON_##__button; \
-		if(default_button == GUI_BUTTON_##__button) \
+		button_mapping[button_count ++] = GUI_MSGBOX_BUTTON_##__button; \
+		if(default_button == GUI_MSGBOX_BUTTON_##__button) \
 			default_value = button_count; \
 	}
 
@@ -262,17 +263,17 @@ int gui_message_box(const char * title, const char * message, int buttons, int d
 
 	switch(icon)
 	{
-	case GUI_ICON_NONE:
-	case GUI_ICON_INFORMATION:
+	case GUI_MSGBOX_ICON_NONE:
+	case GUI_MSGBOX_ICON_INFORMATION:
 		icon_number = 0;
 		break;
-	case GUI_ICON_WARNING:
+	case GUI_MSGBOX_ICON_WARNING:
 		icon_number = 1;
 		break;
-	case GUI_ICON_QUESTION:
+	case GUI_MSGBOX_ICON_QUESTION:
 		icon_number = 2;
 		break;
-	case GUI_ICON_STOP:
+	case GUI_MSGBOX_ICON_STOP:
 		icon_number = 3;
 		break;
 	}
@@ -297,6 +298,26 @@ int gui_message_box(const char * title, const char * message, int buttons, int d
 GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h)
 {
 	WORD window;
+
+	if(x == GUI_WINPOS_DEFAULT)
+		x = 0; // TODO
+	else if(x == GUI_WINPOS_MAXIMUM)
+		x = 0; // TODO
+
+	if(y == GUI_WINPOS_DEFAULT)
+		y = 0; // TODO
+	else if(y == GUI_WINPOS_MAXIMUM)
+		y = 0; // TODO
+
+	if(w == GUI_WINPOS_DEFAULT)
+		w = 0; // TODO
+	else if(w == GUI_WINPOS_MAXIMUM)
+		w = 0; // TODO: set to screen width
+
+	if(h == GUI_WINPOS_DEFAULT)
+		h = 0; // TODO
+	else if(h == GUI_WINPOS_MAXIMUM)
+		h = 0; // TODO: set to screen height
 
 	graf_mouse(M_OFF, 0L);
 	window = wind_create(NAME | CLOSER | MOVER | SIZER, x, y, w, h);
@@ -342,7 +363,7 @@ GuiKey_t gui_get_keycode(GuiKeyEvent_t event)
 	return keycodes[event.keycode >> 8];
 }
 
-GuiPoint_t gui_get_button_coordinates(GuiButtonEvent_t event)
+GuiPoint_t gui_get_mouse_button_coordinates(GuiMouseButtonEvent_t event)
 {
 	GuiPoint_t point;
 	point.x = event.mouse_x;
@@ -350,24 +371,24 @@ GuiPoint_t gui_get_button_coordinates(GuiButtonEvent_t event)
 	return point;
 }
 
-GuiMouseButton_t gui_get_buttons(GuiButtonEvent_t event)
+GuiMouseButton_t gui_get_mouse_buttons(GuiMouseButtonEvent_t event)
 {
 	GuiMouseButton_t buttons = 0;
 	if(event.mouse_buttons & 1)
-		buttons |= GUI_BUTTON_LEFT;
+		buttons |= GUI_MOUSE_BUTTON_LEFT;
 	if(event.mouse_buttons & 2)
-		buttons |= GUI_BUTTON_RIGHT;
+		buttons |= GUI_MOUSE_BUTTON_RIGHT;
 	if(event.mouse_buttons & 4)
-		buttons |= GUI_BUTTON_MIDDLE;
+		buttons |= GUI_MOUSE_BUTTON_MIDDLE;
 	return buttons;
 }
 
-GuiMouseButton_t gui_is_double_click(GuiButtonEvent_t event)
+GuiMouseButton_t gui_is_double_click(GuiMouseButtonEvent_t event)
 {
 	return event.click_count >= 2;
 }
 
-GuiPoint_t gui_get_mouse_coordinates(GuiMouseEvent_t event)
+GuiPoint_t gui_get_mouse_move_coordinates(GuiMouseMoveEvent_t event)
 {
 	GuiPoint_t point;
 	point.x = event.mouse_x;

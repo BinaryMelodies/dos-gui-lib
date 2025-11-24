@@ -26,7 +26,7 @@ typedef struct
 	WPARAM wParam;
 	LPARAM lParam;
 	bool double_click;
-} GuiButtonEvent_t, GuiMouseEvent_t;
+} GuiMouseButtonEvent_t, GuiMouseMoveEvent_t;
 
 typedef struct
 {

@@ -20,9 +20,9 @@ typedef struct
 {
 	xcb_button_press_event_t event;
 	bool double_click;
-} GuiButtonEvent_t;
+} GuiMouseButtonEvent_t;
 
-typedef xcb_motion_notify_event_t GuiMouseEvent_t;
+typedef xcb_motion_notify_event_t GuiMouseMoveEvent_t;
 
 typedef struct
 {

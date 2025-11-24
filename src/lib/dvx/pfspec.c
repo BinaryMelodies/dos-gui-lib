@@ -2,6 +2,7 @@
 /* Implementation for for DESQview/X, specifically the XCB library */
 
 #include "api.h"
+#define _COMPILE_LIBRARY
 #include "internal.h"
 
 #include <stdbool.h>
@@ -126,7 +127,7 @@ typedef struct
 #define _TEXT_SKIP 5
 #define _BUTTON_SKIP 5
 
-int gui_message_box(const char * title, const char * message, int buttons, int default_button, GuiMessageBoxIcon_t icon)
+int gui_message_box(const char * title, const char * message, GuiMessageBoxButtonSet_t buttons, int default_button, GuiMessageBoxIcon_t icon)
 {
 	int button_count;
 	int button_focus, escape_button;
@@ -171,16 +172,16 @@ int gui_message_box(const char * title, const char * message, int buttons, int d
 		button_rectangles[button_count].width = text_width + 2 * _TEXT_SKIP; \
 		button_rectangles[button_count].height = text_height + 2 * _TEXT_SKIP; \
 		buttons_right += text_width + 2 * _TEXT_SKIP + _BUTTON_SKIP; \
-		button_mapping[button_count] = GUI_BUTTON_##__button; \
+		button_mapping[button_count] = GUI_MSGBOX_BUTTON_##__button; \
 		button_count ++; \
 	}
 
 #define _CHECK_BUTTON(__button) \
-	if((buttons & GUI_BUTTON(__button))) \
+	if((buttons & GUI_MSGBOX_BUTTON(__button))) \
 	{ \
-		if(GUI_BUTTON_##__button == GUI_BUTTON_CANCEL) \
+		if(GUI_MSGBOX_BUTTON_##__button == GUI_MSGBOX_BUTTON_CANCEL) \
 			escape_button = button_count; \
-		if(default_button == GUI_BUTTON_##__button) \
+		if(default_button == GUI_MSGBOX_BUTTON_##__button) \
 			button_focus = button_count; \
 		_MAKE_BUTTON(__button); \
 	}
@@ -416,16 +417,36 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 	// set up event mask
 	if(callback_show != 0)
 		event_mask |= XCB_EVENT_MASK_EXPOSURE;
-	if(callback_keypress != 0 || callback_text != 0)
+	if(callback_key_press != 0 || callback_text != 0)
 		event_mask |= XCB_EVENT_MASK_KEY_PRESS;
-	if(callback_keyrelease != 0 || callback_text != 0)
+	if(callback_key_release != 0 || callback_text != 0)
 		event_mask |= XCB_EVENT_MASK_KEY_RELEASE;
-	if(callback_buttonpress != 0)
+	if(callback_mouse_button_press != 0)
 		event_mask |= XCB_EVENT_MASK_BUTTON_PRESS;
-	if(callback_buttonrelease != 0)
+	if(callback_mouse_button_release != 0)
 		event_mask |= XCB_EVENT_MASK_BUTTON_RELEASE;
-	if(callback_mousemove != 0)
+	if(callback_mouse_move != 0)
 		event_mask |= XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_BUTTON_MOTION;
+
+	if(x == GUI_WINPOS_DEFAULT)
+		x = 0; // TODO
+	else if(x == GUI_WINPOS_MAXIMUM)
+		x = 0; // TODO
+
+	if(y == GUI_WINPOS_DEFAULT)
+		y = 0; // TODO
+	else if(y == GUI_WINPOS_MAXIMUM)
+		y = 0; // TODO
+
+	if(w == GUI_WINPOS_DEFAULT)
+		w = 0; // TODO
+	else if(w == GUI_WINPOS_MAXIMUM)
+		w = 0; // TODO: set to screen width
+
+	if(h == GUI_WINPOS_DEFAULT)
+		h = 0; // TODO
+	else if(h == GUI_WINPOS_MAXIMUM)
+		h = 0; // TODO: set to screen height
 
 	_init_window(window, window_title, x, y, w, h, event_mask);
 
@@ -493,9 +514,9 @@ int gui_main_loop(void)
 				_window_redraw(((xcb_expose_event_t *)event)->window);
 				break;
 			case XCB_KEY_PRESS:
-				if(callback_keypress)
+				if(callback_key_press)
 				{
-					callback_keypress(((xcb_key_press_event_t *)event)->event, *(xcb_key_press_event_t *)event);
+					callback_key_press(((xcb_key_press_event_t *)event)->event, *(xcb_key_press_event_t *)event);
 				}
 
 				if(callback_text)
@@ -574,15 +595,15 @@ int gui_main_loop(void)
 						xcb_flush(connection);
 					}
 				}
-				else if(callback_keypress)
+				else if(callback_key_press)
 				{
 					xcb_flush(connection);
 				}
 				break;
 			case XCB_KEY_RELEASE:
-				if(callback_keyrelease)
+				if(callback_key_release)
 				{
-					callback_keyrelease(((xcb_key_release_event_t *)event)->event, *(xcb_key_press_event_t *)event);
+					callback_key_release(((xcb_key_release_event_t *)event)->event, *(xcb_key_press_event_t *)event);
 					xcb_flush(connection);
 				}
 
@@ -608,10 +629,9 @@ int gui_main_loop(void)
 				}
 				break;
 			case XCB_BUTTON_PRESS:
-				// TODO: double clicks are not supported
-				if(callback_buttonpress)
+				if(callback_mouse_button_press)
 				{
-					GuiButtonEvent_t button_event;
+					GuiMouseButtonEvent_t button_event;
 					button_event.event = *(xcb_button_press_event_t *)event;
 					button_event.double_click =
 						gui_last_button == ((xcb_button_press_event_t *)event)->detail
@@ -620,25 +640,25 @@ int gui_main_loop(void)
 					gui_last_button_click = ((xcb_button_press_event_t *)event)->time;
 					gui_last_button = ((xcb_button_press_event_t *)event)->detail;
 
-					callback_buttonpress(((xcb_button_press_event_t *)event)->event, button_event);
+					callback_mouse_button_press(((xcb_button_press_event_t *)event)->event, button_event);
 					xcb_flush(connection);
 				}
 				break;
 			case XCB_BUTTON_RELEASE:
-				if(callback_buttonrelease)
+				if(callback_mouse_button_release)
 				{
-					GuiButtonEvent_t button_event;
+					GuiMouseButtonEvent_t button_event;
 					button_event.event = *(xcb_button_press_event_t *)event;
 					button_event.double_click = false;
 
-					callback_buttonrelease(((xcb_button_release_event_t *)event)->event, button_event);
+					callback_mouse_button_release(((xcb_button_release_event_t *)event)->event, button_event);
 					xcb_flush(connection);
 				}
 				break;
 			case XCB_MOTION_NOTIFY:
-				if(callback_mousemove)
+				if(callback_mouse_move)
 				{
-					callback_mousemove(((xcb_button_release_event_t *)event)->event, *(xcb_motion_notify_event_t *)event);
+					callback_mouse_move(((xcb_button_release_event_t *)event)->event, *(xcb_motion_notify_event_t *)event);
 					xcb_flush(connection);
 				}
 				break;
@@ -719,7 +739,7 @@ GuiKey_t gui_get_keycode(GuiKeyEvent_t event)
 	return keycodes[event.detail];
 }
 
-GuiPoint_t gui_get_button_coordinates(GuiButtonEvent_t event)
+GuiPoint_t gui_get_mouse_button_coordinates(GuiMouseButtonEvent_t event)
 {
 	GuiPoint_t point;
 	point.x = event.event.event_x;
@@ -727,30 +747,30 @@ GuiPoint_t gui_get_button_coordinates(GuiButtonEvent_t event)
 	return point;
 }
 
-GuiMouseButton_t gui_get_buttons(GuiButtonEvent_t event)
+GuiMouseButton_t gui_get_mouse_buttons(GuiMouseButtonEvent_t event)
 {
 	GuiMouseButton_t buttons = 0;
 	switch(event.event.detail)
 	{
 	case 1:
-		buttons = GUI_BUTTON_LEFT;
+		buttons = GUI_MOUSE_BUTTON_LEFT;
 		break;
 	case 2:
-		buttons = GUI_BUTTON_MIDDLE;
+		buttons = GUI_MOUSE_BUTTON_MIDDLE;
 		break;
 	case 3:
-		buttons = GUI_BUTTON_RIGHT;
+		buttons = GUI_MOUSE_BUTTON_RIGHT;
 		break;
 	}
 	return buttons;
 }
 
-GuiMouseButton_t gui_is_double_click(GuiButtonEvent_t event)
+GuiMouseButton_t gui_is_double_click(GuiMouseButtonEvent_t event)
 {
 	return event.double_click;
 }
 
-GuiPoint_t gui_get_mouse_coordinates(GuiMouseEvent_t event)
+GuiPoint_t gui_get_mouse_move_coordinates(GuiMouseMoveEvent_t event)
 {
 	GuiPoint_t point;
 	point.x = event.event_x;
