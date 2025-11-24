@@ -1,0 +1,24 @@
+
+#### Makefile for Watcom Win386 extender (32-bit)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/win
+
+VERSION=-386
+PLATFORM=win
+EXESFX=.exe
+LNKSFX=.rex
+WCL=wcl386
+CFLAGS=-bt=windows -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM)
+LDFLAGS=system win386 libpath $(BINDIR)/lib/$(PLATFORM) lib dtk386
+LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk386.lib
+
+include Makefile.main
+
+%.exe: %.rex
+	wbind $(@:exe=) -q -n
+

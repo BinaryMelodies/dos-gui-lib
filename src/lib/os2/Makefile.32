@@ -1,0 +1,13 @@
+
+# Makefile for OS/2 (32-bit)
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/os2
+
+PLATFORM=os2
+LIBSUFFIX=32
+WCL=wcl386
+CFLAGS=-bt=os2v2_pm
+
+include ../Makefile.template
+

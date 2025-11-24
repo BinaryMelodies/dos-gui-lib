@@ -1,0 +1,13 @@
+
+# Makefile for GEM (16-bit, large model)
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/gem
+
+PLATFORM=gem
+LIBSUFFIX=-l
+WCL=wcl
+CFLAGS=-bt=dos -ml
+
+include ../Makefile.template
+

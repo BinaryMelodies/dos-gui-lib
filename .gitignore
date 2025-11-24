@@ -1,0 +1,6 @@
+*~
+*.err
+external/*
+!external/watcom
+bin
+obj

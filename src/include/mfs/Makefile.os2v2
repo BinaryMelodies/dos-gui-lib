@@ -1,0 +1,21 @@
+
+#### Makefile for OS/2 (32-bit)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/os2
+
+VERSION=_32
+PLATFORM=os2
+EXESFX=.exe
+LNKSFX=$(EXESFX)
+WCL=wcl386
+CFLAGS=-bt=os2v2_pm -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM) -s
+LDFLAGS=system os2v2_pm libpath $(BINDIR)/lib/$(PLATFORM) lib dtk32
+LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk32.lib
+
+include Makefile.main
+

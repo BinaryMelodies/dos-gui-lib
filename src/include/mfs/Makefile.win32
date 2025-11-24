@@ -1,0 +1,21 @@
+
+#### Makefile for Windows (32-bit)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/nt
+
+VERSION=_32
+PLATFORM=win
+EXESFX=.exe
+LNKSFX=$(EXESFX)
+WCL=wcl386
+CFLAGS=-bt=nt -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM)
+LDFLAGS=system nt libpath $(BINDIR)/lib/$(PLATFORM) lib dtk32
+LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk32.lib
+
+include Makefile.main
+

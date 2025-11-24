@@ -1,0 +1,21 @@
+
+#### Makefile for DESQview/X (16-bit, small model)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h
+
+VERSION=-s
+PLATFORM=dvx
+EXESFX=.exe
+LNKSFX=$(EXESFX)
+WCL=wcl
+CFLAGS=-bt=dos -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM) -ms
+LDFLAGS=system dos libpath $(BINDIR)/lib/$(PLATFORM) lib xcblib lib dtk-s
+LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk-s.lib
+
+include Makefile.main
+

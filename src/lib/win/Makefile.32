@@ -1,0 +1,13 @@
+
+# Makefile for Windows (32-bit)
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/nt
+
+PLATFORM=win
+LIBSUFFIX=32
+WCL=wcl386
+CFLAGS=-bt=nt -dWINDOWS_TARGET_VERSION=3
+
+include ../Makefile.template
+

@@ -1,0 +1,13 @@
+
+# Makefile for Watcom Win386 extender (32-bit)
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/win
+
+PLATFORM=win
+LIBSUFFIX=386
+WCL=wcl386
+CFLAGS=-bt=windows -dWINDOWS_TARGET_VERSION=3
+
+include ../Makefile.template
+

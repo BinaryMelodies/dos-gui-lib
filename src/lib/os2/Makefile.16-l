@@ -1,0 +1,13 @@
+
+# Makefile for OS/2 (16-bit, large model)
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/os21x
+
+PLATFORM=os2
+LIBSUFFIX=-l
+WCL=wcl
+CFLAGS=-bt=os2_pm -s -ml
+
+include ../Makefile.template
+

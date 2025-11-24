@@ -1,0 +1,13 @@
+
+# Makefile for Windows 1.x-3.x (16-bit, small model)
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/win
+
+PLATFORM=win
+LIBSUFFIX=1s
+WCL=wcl
+CFLAGS=-bt=windows -zW -zdf -dWINDOWS_TARGET_VERSION=1 -ms
+
+include ../Makefile.template
+

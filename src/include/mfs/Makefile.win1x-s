@@ -1,0 +1,21 @@
+
+#### Makefile for Windows 1.x-3.x (16-bit, small model)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/win
+
+VERSION=-1s
+PLATFORM=win
+EXESFX=.exe
+LNKSFX=$(EXESFX)
+WCL=wcl
+CFLAGS=-bt=windows -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM) -s -ms
+LDFLAGS=system windows2 memory font file $(BINDIR)/lib/win/win10s libpath $(BINDIR)/lib/$(PLATFORM) lib dtk1s
+LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk1s.lib
+
+include Makefile.main
+

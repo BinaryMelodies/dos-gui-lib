@@ -1,0 +1,13 @@
+
+# Makefile for DESQview/X (16-bit, small model)
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h
+
+PLATFORM=dvx
+LIBSUFFIX=-s
+WCL=wcl
+CFLAGS=-bt=dos -ms
+
+include ../Makefile.template
+

@@ -1,0 +1,21 @@
+
+#### Makefile for Windows 3.x (16-bit, large model)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/win
+
+VERSION=-3l
+PLATFORM=win
+EXESFX=.exe
+LNKSFX=$(EXESFX)
+WCL=wcl
+CFLAGS=-bt=windows -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM) -s -ml
+LDFLAGS=system windows file $(BINDIR)/lib/win/win30l libpath $(BINDIR)/lib/$(PLATFORM) lib dtk3l
+LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk3l.lib
+
+include Makefile.main
+

@@ -1,0 +1,21 @@
+
+#### Makefile for 16-bit OS/2 (16-bit, large model)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/os21x
+
+VERSION=-l
+PLATFORM=os2
+EXESFX=.exe
+LNKSFX=$(EXESFX)
+WCL=wcl
+CFLAGS=-bt=os2_pm -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM) -s -ml
+LDFLAGS=system os2_pm libpath $(BINDIR)/lib/$(PLATFORM) lib dtk-l
+LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk-l.lib
+
+include Makefile.main
+

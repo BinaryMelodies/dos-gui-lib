@@ -1,0 +1,11 @@
+
+all: $(BINDIR)/$(PLATFORM)/001$(VERSION)$(EXESFX)
+
+$(OBJDIR)/001/$(PLATFORM)/%$(VERSION).obj: %.c
+	mkdir -p `dirname $@`
+	$(WCL) -q $(CFLAGS) $< -c -fo=$@ -dGUI_`echo $(PLATFORM) | tr [:lower:] [:upper:]`
+
+$(BINDIR)/$(PLATFORM)/001$(VERSION)$(LNKSFX): $(OBJDIR)/001/$(PLATFORM)/main$(VERSION).obj $(LIBS)
+	mkdir -p `dirname $@`
+	wlink option quiet file $< name $@ $(LDFLAGS)
+

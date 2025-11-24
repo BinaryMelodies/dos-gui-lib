@@ -1,0 +1,21 @@
+
+#### Makefile for GEM (16-bit, large model)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+export PATH:=$(WATCOM)/binl:$(PATH)
+export INCLUDE:=$(WATCOM)/h:$(WATCOM)/h/gem
+
+VERSION=-l
+PLATFORM=gem
+EXESFX=.app
+LNKSFX=$(EXESFX)
+WCL=wcl
+CFLAGS=-bt=dos -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM) -ml
+LDFLAGS=system dos libpath $(BINDIR)/lib/$(PLATFORM) lib gembnd-l lib dtk-l
+LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk-l.lib
+
+include Makefile.main
+
