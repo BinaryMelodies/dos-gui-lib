@@ -191,7 +191,7 @@ int gui_main_loop(void)
 
 			event.mouse_x = mouse_x;
 			event.mouse_y = mouse_y;
-			event.mouse_buttons = mouse_buttons; // TODO: does not work
+			//event.mouse_buttons = mouse_buttons; // TODO: does not work
 			//event.mouse_buttons = callback_buttons_mask & GUI_MOUSE_BUTTON_LEFT ? GUI_MOUSE_BUTTON_LEFT : callback_buttons_mask & GUI_MOUSE_BUTTON_RIGHT ? GUI_MOUSE_BUTTON_RIGHT : GUI_MOUSE_BUTTON_MIDDLE;
 			event.keystate = keystate;
 

@@ -6,6 +6,7 @@
 #include <gembind.h>
 
 typedef WORD GuiWindow_t;
+
 typedef GuiWindow_t GuiDrawContext_t;
 
 typedef struct
@@ -21,7 +22,7 @@ typedef struct
 
 typedef struct
 {
-	UWORD mouse_x, mouse_y, mouse_buttons, click_count, keystate;
+	UWORD mouse_x, mouse_y/*, mouse_buttons*/, keystate;
 } GuiMouseMoveEvent_t;
 
 typedef struct

@@ -3,9 +3,8 @@
 
 /* Platform specific definitions for Microsoft Windows */
 
+// must be included before stddef.h
 #include <windows.h>
-
-#define main _c_main
 
 typedef HWND GuiWindow_t;
 typedef struct {

@@ -6,12 +6,12 @@
 #include <xcb/xcb.h>
 
 typedef xcb_window_t GuiWindow_t;
+
 typedef struct
 {
 	xcb_window_t window;
 	xcb_gcontext_t graphics_context;
 	xcb_font_t current_font;
-	//int current_font_height;
 } GuiDrawContext_t;
 
 typedef xcb_key_press_event_t GuiKeyEvent_t;

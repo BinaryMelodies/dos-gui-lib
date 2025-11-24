@@ -8,6 +8,7 @@
 #include <os2.h>
 
 typedef HWND GuiWindow_t;
+
 typedef struct
 {
 	HPS hps;
