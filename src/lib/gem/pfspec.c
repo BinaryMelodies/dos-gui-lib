@@ -496,8 +496,6 @@ void gui_write_text(GuiDrawContext_t draw_context, int x, int y, const char * te
 	GuiRectangle_t client_area = gui_window_get_client_area(draw_context);
 	vswr_mode(vdi_handle, MD_TRANS);
 	v_gtext(vdi_handle, client_area.x + x, client_area.y + y, (char *)text);
-//	vst_color(vdi_handle, WHITE);
-//	v_gtext(vdi_handle, 10, 10, "HHHEY");
 }
 
 int main(int argc, char ** argv, char ** envp)
