@@ -146,23 +146,32 @@ static bool far _callback_keypress(GuiWindow_t window, GuiKeyEvent_t key_event)
 	if(gui_get_keycode(key_event) == KeyEscape)
 		exit(1);
 
-	if(gui_get_keycode(key_event) != 0)
-	{
-		//char buffer[256];
-		const char far * name = key_names[gui_get_keycode(key_event)];
-		if(name == NULL)
-			name = "invalid";
-		_fsnprintf(message_buffer, sizeof message_buffer, "[%d] Key: %Ws", keypress_counter++, name);
-		gui_window_redraw(window);
-	}
-#if 0
-	if(gui_get_keycode(key_event) != 0)
-	{
-		_fsnprintf(message_buffer, sizeof message_buffer, "[%d] Key: %d", keypress_counter++, gui_get_keycode(key_event));
-		gui_window_redraw(window);
-	}
-#endif
+	return true;
+}
 
+static bool far _callback_buttonpress(GuiWindow_t window, GuiMouseButtonEvent_t mouse_button_event)
+{
+	GuiPoint_t point = gui_get_mouse_button_coordinates(mouse_button_event);
+	GuiMouseButton_t buttons = gui_get_mouse_buttons(mouse_button_event);
+	_fsnprintf(message_buffer, sizeof message_buffer, "X (%d,%d): %X %s", point.x, point.y, buttons, gui_is_double_click(mouse_button_event) ? "D" : "S");
+	gui_window_redraw(window);
+	return true;
+}
+
+static bool far _callback_buttonrelease(GuiWindow_t window, GuiMouseButtonEvent_t mouse_button_event)
+{
+	GuiPoint_t point = gui_get_mouse_button_coordinates(mouse_button_event);
+	GuiMouseButton_t buttons = gui_get_mouse_buttons(mouse_button_event);
+	_fsnprintf(message_buffer, sizeof message_buffer, "O (%d,%d): %X", point.x, point.y, buttons);
+	gui_window_redraw(window);
+	return true;
+}
+
+static bool far _callback_mousemove(GuiWindow_t window, GuiMouseMoveEvent_t mouse_move_event)
+{
+	GuiPoint_t point = gui_get_mouse_move_coordinates(mouse_move_event);
+	_fsnprintf(message_buffer, sizeof message_buffer, "M (%d,%d)", point.x, point.y);
+	gui_window_redraw(window);
 	return true;
 }
 
@@ -187,6 +196,10 @@ int gui_main(GuiMainParameters_t parameters)
 
 	gui_register_callback_show(_callback_show);
 	gui_register_callback_key_press(_callback_keypress);
+	gui_observe_mouse_buttons(GUI_MOUSE_BUTTON_LEFT | GUI_MOUSE_BUTTON_RIGHT | GUI_MOUSE_BUTTON_MIDDLE, GUI_MOUSE_CLICK_SINGLE | GUI_MOUSE_CLICK_DOUBLE);
+	gui_register_callback_mouse_button_press(_callback_buttonpress);
+	gui_register_callback_mouse_button_release(_callback_buttonrelease);
+	gui_register_callback_mouse_move(_callback_mousemove);
 
 	window = gui_window_create(WINDOW_TITLE, 10, 20, 300, 150);
 

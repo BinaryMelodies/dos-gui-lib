@@ -146,23 +146,17 @@ static bool far _callback_keypress(GuiWindow_t window, GuiKeyEvent_t key_event)
 	if(gui_get_keycode(key_event) == KeyEscape)
 		exit(1);
 
-	if(gui_get_keycode(key_event) != 0)
-	{
-		//char buffer[256];
-		const char far * name = key_names[gui_get_keycode(key_event)];
-		if(name == NULL)
-			name = "invalid";
-		_fsnprintf(message_buffer, sizeof message_buffer, "[%d] Key: %Ws", keypress_counter++, name);
-		gui_window_redraw(window);
-	}
-#if 0
-	if(gui_get_keycode(key_event) != 0)
-	{
-		_fsnprintf(message_buffer, sizeof message_buffer, "[%d] Key: %d", keypress_counter++, gui_get_keycode(key_event));
-		gui_window_redraw(window);
-	}
-#endif
+	return true;
+}
 
+static bool far _callback_text(GuiWindow_t window, size_t count, char far * text)
+{
+#if __I86__
+	_fsnprintf(message_buffer, sizeof message_buffer, "%.*Ws", (int)count, text);
+#elif __386__
+	_fsnprintf(message_buffer, sizeof message_buffer, "%.*s", (int)count, text);
+#endif
+	gui_window_redraw(window);
 	return true;
 }
 
@@ -187,6 +181,7 @@ int gui_main(GuiMainParameters_t parameters)
 
 	gui_register_callback_show(_callback_show);
 	gui_register_callback_key_press(_callback_keypress);
+	gui_register_callback_text(_callback_text);
 
 	window = gui_window_create(WINDOW_TITLE, 10, 20, 300, 150);
 
