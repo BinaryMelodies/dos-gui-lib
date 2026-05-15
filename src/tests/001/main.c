@@ -24,12 +24,12 @@ static bool far _callback_show(GuiWindow_t window)
 	GuiDrawContext_t draw_context = gui_window_begin_draw(window);
 	GuiRectangle_t client_area = gui_window_get_client_area(window);
 
-	gui_set_color_black(draw_context);
-	gui_fill_rectangle(draw_context, 0, 0, client_area.w, client_area.h);
-	gui_set_color_white(draw_context);
-	gui_draw_line(draw_context, 10, 10, 30, 30);
-	gui_write_text(draw_context, 10, 20, message_buffer);
-	gui_window_end_draw(draw_context);
+	gui_set_color_black(&draw_context);
+	gui_fill_rectangle(&draw_context, 0, 0, client_area.w, client_area.h);
+	gui_set_color_white(&draw_context);
+	gui_draw_line(&draw_context, 10, 10, 30, 30);
+	gui_write_text(&draw_context, 10, 20, message_buffer);
+	gui_window_end_draw(&draw_context);
 
 	return true;
 }

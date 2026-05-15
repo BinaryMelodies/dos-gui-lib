@@ -499,70 +499,70 @@ GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
 	return draw_context;
 }
 
-void gui_window_end_draw(GuiDrawContext_t draw_context)
+void gui_window_end_draw(GuiDrawContext_t * draw_context)
 {
-	WinEndPaint(draw_context.hps);
+	WinEndPaint(draw_context->hps);
 }
 
-void gui_set_color_black(GuiDrawContext_t draw_context)
+void gui_set_color_black(GuiDrawContext_t * draw_context)
 {
-	GpiSetColor(draw_context.hps, CLR_BLACK);
+	GpiSetColor(draw_context->hps, CLR_BLACK);
 }
 
-void gui_set_color_white(GuiDrawContext_t draw_context)
+void gui_set_color_white(GuiDrawContext_t * draw_context)
 {
-	GpiSetColor(draw_context.hps, CLR_WHITE);
+	GpiSetColor(draw_context->hps, CLR_WHITE);
 }
 
-void gui_fill_rectangle(GuiDrawContext_t draw_context, int x, int y, int w, int h)
+void gui_fill_rectangle(GuiDrawContext_t * draw_context, int x, int y, int w, int h)
 {
 	POINTL ptl;
 
 	ptl.x = x;
-	ptl.y = draw_context.window_height - 1 - y;
+	ptl.y = draw_context->window_height - 1 - y;
 
-	GpiMove(draw_context.hps, &ptl);
+	GpiMove(draw_context->hps, &ptl);
 
 	ptl.x = x + w;
-	ptl.y = draw_context.window_height - 1 - y - h;
+	ptl.y = draw_context->window_height - 1 - y - h;
 
-	GpiBox(draw_context.hps, DRO_FILL, &ptl, 0L, 0L);
+	GpiBox(draw_context->hps, DRO_FILL, &ptl, 0L, 0L);
 }
 
-void gui_draw_line(GuiDrawContext_t draw_context, int x1, int y1, int x2, int y2)
+void gui_draw_line(GuiDrawContext_t * draw_context, int x1, int y1, int x2, int y2)
 {
 	POINTL ptl;
 
 	ptl.x = x1;
-	ptl.y = draw_context.window_height - 1 - y1;
+	ptl.y = draw_context->window_height - 1 - y1;
 
-	GpiMove(draw_context.hps, &ptl);
+	GpiMove(draw_context->hps, &ptl);
 
 	ptl.x = x2;
-	ptl.y = draw_context.window_height - 1 - y2;
+	ptl.y = draw_context->window_height - 1 - y2;
 
-	GpiLine(draw_context.hps, &ptl);
+	GpiLine(draw_context->hps, &ptl);
 }
 
-int gui_get_font_height(GuiDrawContext_t draw_context)
+int gui_get_font_height(GuiDrawContext_t * draw_context)
 {
 	FONTMETRICS fm;
-	GpiQueryFontMetrics(draw_context.hps, sizeof fm, &fm);
+	GpiQueryFontMetrics(draw_context->hps, sizeof fm, &fm);
 	return fm.lMaxBaselineExt;
 }
 
-void gui_write_text(GuiDrawContext_t draw_context, int x, int y, const char * text)
+void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * text)
 {
 	FONTMETRICS fm;
 	POINTL ptl;
 
-	GpiQueryFontMetrics(draw_context.hps, sizeof fm, &fm);
+	GpiQueryFontMetrics(draw_context->hps, sizeof fm, &fm);
 
 	ptl.x = x;
-	ptl.y = draw_context.window_height - 1 - y + fm.lMaxDescender;
-	GpiCharStringAt(draw_context.hps, &ptl, strlen(text), (char *)text);
+	ptl.y = draw_context->window_height - 1 - y + fm.lMaxDescender;
+	GpiCharStringAt(draw_context->hps, &ptl, strlen(text), (char *)text);
 	//GpiMove(draw_context, &ptl);
-	//GpiCharString(draw_context.hps, strlen(text), (char *)text);
+	//GpiCharString(draw_context->hps, strlen(text), (char *)text);
 }
 
 int main(int argc, char ** argv, char ** envp)

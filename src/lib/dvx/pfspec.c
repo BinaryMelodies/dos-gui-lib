@@ -833,27 +833,27 @@ GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
 	return draw_context;
 }
 
-void gui_window_end_draw(GuiDrawContext_t draw_context)
+void gui_window_end_draw(GuiDrawContext_t * draw_context)
 {
-	xcb_close_font(connection, draw_context.current_font);
-	xcb_free_gc(connection, draw_context.graphics_context);
+	xcb_close_font(connection, draw_context->current_font);
+	xcb_free_gc(connection, draw_context->graphics_context);
 }
 
-void gui_set_color_black(GuiDrawContext_t draw_context)
+void gui_set_color_black(GuiDrawContext_t * draw_context)
 {
 	uint32_t values[1];
 	values[0] = screen->black_pixel;
-	xcb_change_gc(connection, draw_context.graphics_context, XCB_GC_FOREGROUND, values);
+	xcb_change_gc(connection, draw_context->graphics_context, XCB_GC_FOREGROUND, values);
 }
 
-void gui_set_color_white(GuiDrawContext_t draw_context)
+void gui_set_color_white(GuiDrawContext_t * draw_context)
 {
 	uint32_t values[1];
 	values[0] = screen->white_pixel;
-	xcb_change_gc(connection, draw_context.graphics_context, XCB_GC_FOREGROUND, values);
+	xcb_change_gc(connection, draw_context->graphics_context, XCB_GC_FOREGROUND, values);
 }
 
-void gui_fill_rectangle(GuiDrawContext_t draw_context, int x, int y, int w, int h)
+void gui_fill_rectangle(GuiDrawContext_t * draw_context, int x, int y, int w, int h)
 {
 	xcb_rectangle_t rectangles[1];
 //printf("[%d,%d,%d,%d]\n", x, y, w, h);
@@ -861,26 +861,26 @@ void gui_fill_rectangle(GuiDrawContext_t draw_context, int x, int y, int w, int 
 	rectangles[0].y = y;
 	rectangles[0].width = w;
 	rectangles[0].height = h;
-	xcb_poly_fill_rectangle(connection, draw_context.window, draw_context.graphics_context, 1, rectangles);
+	xcb_poly_fill_rectangle(connection, draw_context->window, draw_context->graphics_context, 1, rectangles);
 }
 
-void gui_draw_line(GuiDrawContext_t draw_context, int x1, int y1, int x2, int y2)
+void gui_draw_line(GuiDrawContext_t * draw_context, int x1, int y1, int x2, int y2)
 {
 	xcb_point_t points[2];
 	points[0].x = x1;
 	points[0].y = y1;
 	points[1].x = x2;
 	points[1].y = y2;
-	xcb_poly_line(connection, XCB_COORD_MODE_ORIGIN, draw_context.window, draw_context.graphics_context, 2, points);
+	xcb_poly_line(connection, XCB_COORD_MODE_ORIGIN, draw_context->window, draw_context->graphics_context, 2, points);
 }
 
-int gui_get_font_height(GuiDrawContext_t draw_context)
+int gui_get_font_height(GuiDrawContext_t * draw_context)
 {
 	int height;
 	xcb_query_text_extents_reply_t * reply;
 
 	reply = xcb_query_text_extents_reply(connection,
-		xcb_query_text_extents(connection, draw_context.current_font, 0, NULL),
+		xcb_query_text_extents(connection, draw_context->current_font, 0, NULL),
 		NULL);
 
 	height = reply->font_ascent + reply->font_descent;
@@ -891,13 +891,13 @@ int gui_get_font_height(GuiDrawContext_t draw_context)
 
 }
 
-void gui_write_text(GuiDrawContext_t draw_context, int x, int y, const char * text)
+void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * text)
 {
 	char * item = malloc(strlen(text) + 2);
 	item[0] = strlen(text);
 	item[1] = 0;
 	memcpy(&item[2], text, strlen(text));
-	xcb_poly_text_8(connection, draw_context.window, draw_context.graphics_context, x, y, strlen(text) + 2, item);
+	xcb_poly_text_8(connection, draw_context->window, draw_context->graphics_context, x, y, strlen(text) + 2, item);
 	free(item);
 }
 

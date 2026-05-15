@@ -75,26 +75,52 @@ int gui_main_loop(void)
 			}
 		}
 
-		which = evnt_multi(MU_MESAG
-				| (callback_key_press ? MU_KEYBD : 0)
-				| (callback_mouse_button_press || callback_mouse_button_release ? MU_BUTTON : 0)
-				| (callback_mouse_move ? MU_M1 : 0),
-			// button
-			callback_click_count_mask & GUI_MOUSE_CLICK_DOUBLE ? 2 : 1,
-				// we can only check for a single mouse button
-			callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_LEFT ? 1 : callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_RIGHT ? 2 : 4,
-			gui_last_button_state ? 0 : callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_LEFT ? 1 : callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_RIGHT ? 2 : 4,
-			// mouse
-			1, x, y, 1, 1,
-			0, 0, 0, 0, 0,
-			// mesag
-			msg,
-			// timer
-			0, 0,
-			// mouse
-			&mouse_x, &mouse_y, &mouse_buttons,
-			// keybd
-			&keystate, &keycode, &click_count);
+		{
+			UWORD events = MU_MESAG;
+			UWORD check_click_count;
+			UWORD check_button_mask;
+			UWORD check_button_state;
+
+			if(callback_key_press)
+				events |= MU_KEYBD;
+			if(callback_mouse_button_press || callback_mouse_button_release)
+				events |= MU_BUTTON;
+			if(callback_mouse_move)
+				events |= MU_M1;
+
+			if(callback_click_count_mask & GUI_MOUSE_CLICK_DOUBLE)
+				check_click_count = 2;
+			else
+				check_click_count = 1;
+
+			// we can only check for a single mouse button
+			if(callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_LEFT)
+				check_button_mask = 1;
+			else if(callback_mouse_buttons_mask & GUI_MOUSE_BUTTON_RIGHT)
+				check_button_mask = 2;
+			else
+				check_button_mask = 4;
+
+			if(gui_last_button_state)
+				check_button_state = 0;
+			else
+				check_button_state = check_button_mask;
+
+			which = evnt_multi(events,
+				// button
+				check_click_count, check_button_mask, check_button_state,
+				// mouse
+				1, x, y, 1, 1,
+				0, 0, 0, 0, 0,
+				// mesag
+				msg,
+				// timer
+				0, 0,
+				// mouse
+				&mouse_x, &mouse_y, &mouse_buttons,
+				// keybd
+				&keystate, &keycode, &click_count);
+		}
 
 		if(which & MU_MESAG)
 		{
@@ -138,6 +164,7 @@ int gui_main_loop(void)
 				event.keystate = keystate;
 				callback_key_press(msg[3], event);
 			}
+
 			if(callback_text)
 			{
 				char c = keycode & 0xFF;
@@ -433,9 +460,9 @@ GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
 	return window;
 }
 
-void gui_window_end_draw(GuiDrawContext_t draw_context)
+void gui_window_end_draw(GuiDrawContext_t * draw_context)
 {
-	GuiRectangle_t client_area = gui_window_get_client_area(draw_context);
+	GuiRectangle_t client_area = gui_window_get_client_area(*draw_context);
 	WORD rect[4];
 	rect[0] = client_area.x;
 	rect[1] = client_area.y;
@@ -447,24 +474,24 @@ void gui_window_end_draw(GuiDrawContext_t draw_context)
 	wind_update(END_UPDATE);
 }
 
-void gui_set_color_black(GuiDrawContext_t draw_context)
+void gui_set_color_black(GuiDrawContext_t * draw_context)
 {
 	vsf_color(vdi_handle, BLACK);
 	vsl_color(vdi_handle, BLACK);
 	vst_color(vdi_handle, BLACK);
 }
 
-void gui_set_color_white(GuiDrawContext_t draw_context)
+void gui_set_color_white(GuiDrawContext_t * draw_context)
 {
 	vsf_color(vdi_handle, WHITE);
 	vsl_color(vdi_handle, WHITE);
 	vst_color(vdi_handle, WHITE);
 }
 
-void gui_fill_rectangle(GuiDrawContext_t draw_context, int x, int y, int w, int h)
+void gui_fill_rectangle(GuiDrawContext_t * draw_context, int x, int y, int w, int h)
 {
 	WORD xys[4];
-	GuiRectangle_t client_area = gui_window_get_client_area(draw_context);
+	GuiRectangle_t client_area = gui_window_get_client_area(*draw_context);
 	xys[0] = client_area.x + x;
 	xys[1] = client_area.y + y;
 	xys[2] = client_area.x + x + w - 1;
@@ -473,10 +500,10 @@ void gui_fill_rectangle(GuiDrawContext_t draw_context, int x, int y, int w, int 
 	vr_recfl(vdi_handle, xys);
 }
 
-void gui_draw_line(GuiDrawContext_t draw_context, int x1, int y1, int x2, int y2)
+void gui_draw_line(GuiDrawContext_t * draw_context, int x1, int y1, int x2, int y2)
 {
 	WORD xys[4];
-	GuiRectangle_t client_area = gui_window_get_client_area(draw_context);
+	GuiRectangle_t client_area = gui_window_get_client_area(*draw_context);
 	xys[0] = client_area.x + x1;
 	xys[1] = client_area.y + y1;
 	xys[2] = client_area.x + x2;
@@ -485,15 +512,15 @@ void gui_draw_line(GuiDrawContext_t draw_context, int x1, int y1, int x2, int y2
 	v_pline(vdi_handle, 2, xys);
 }
 
-int gui_get_font_height(GuiDrawContext_t draw_context)
+int gui_get_font_height(GuiDrawContext_t * draw_context)
 {
 	// TODO
 	return 0;
 }
 
-void gui_write_text(GuiDrawContext_t draw_context, int x, int y, const char * text)
+void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * text)
 {
-	GuiRectangle_t client_area = gui_window_get_client_area(draw_context);
+	GuiRectangle_t client_area = gui_window_get_client_area(*draw_context);
 	vswr_mode(vdi_handle, MD_TRANS);
 	v_gtext(vdi_handle, client_area.x + x, client_area.y + y, (char *)text);
 }

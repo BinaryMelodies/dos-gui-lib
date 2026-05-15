@@ -568,57 +568,57 @@ GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
 	return draw_context;
 }
 
-void gui_window_end_draw(GuiDrawContext_t draw_context)
+void gui_window_end_draw(GuiDrawContext_t * draw_context)
 {
-	ReleaseDC(draw_context.hWnd, draw_context.hdc);
-	EndPaint(draw_context.hWnd, &draw_context.ps);
+	ReleaseDC(draw_context->hWnd, draw_context->hdc);
+	EndPaint(draw_context->hWnd, &draw_context->ps);
 }
 
-void gui_set_color_black(GuiDrawContext_t draw_context)
+void gui_set_color_black(GuiDrawContext_t * draw_context)
 {
-	SelectObject(draw_context.hdc, GetStockObject(BLACK_PEN));
-	draw_context.brush = GetStockObject(BLACK_BRUSH);
-	SetTextColor(draw_context.hdc, RGB(0x00, 0x00, 0x00));
+	SelectObject(draw_context->hdc, GetStockObject(BLACK_PEN));
+	draw_context->brush = GetStockObject(BLACK_BRUSH);
+	SetTextColor(draw_context->hdc, RGB(0x00, 0x00, 0x00));
 }
 
-void gui_set_color_white(GuiDrawContext_t draw_context)
+void gui_set_color_white(GuiDrawContext_t * draw_context)
 {
-	SelectObject(draw_context.hdc, GetStockObject(WHITE_PEN));
-	draw_context.brush = GetStockObject(WHITE_BRUSH);
-	SetTextColor(draw_context.hdc, RGB(0xFF, 0xFF, 0xFF));
+	SelectObject(draw_context->hdc, GetStockObject(WHITE_PEN));
+	draw_context->brush = GetStockObject(WHITE_BRUSH);
+	SetTextColor(draw_context->hdc, RGB(0xFF, 0xFF, 0xFF));
 }
 
-void gui_fill_rectangle(GuiDrawContext_t draw_context, int x, int y, int w, int h)
+void gui_fill_rectangle(GuiDrawContext_t * draw_context, int x, int y, int w, int h)
 {
 	RECT rectangle;
 	rectangle.left = x;
 	rectangle.top = y;
 	rectangle.right = x + w - 1;
 	rectangle.bottom = y + h - 1;
-	FillRect(draw_context.hdc, &rectangle, draw_context.brush);
+	FillRect(draw_context->hdc, &rectangle, draw_context->brush);
 }
 
-void gui_draw_line(GuiDrawContext_t draw_context, int x1, int y1, int x2, int y2)
+void gui_draw_line(GuiDrawContext_t * draw_context, int x1, int y1, int x2, int y2)
 {
 #if __I86__
-	MoveTo(draw_context.hdc, x1, y1);
+	MoveTo(draw_context->hdc, x1, y1);
 #else
-	MoveToEx(draw_context.hdc, x1, y1, (LPPOINT) NULL);
+	MoveToEx(draw_context->hdc, x1, y1, (LPPOINT) NULL);
 #endif
-	LineTo(draw_context.hdc, x2, y2);
+	LineTo(draw_context->hdc, x2, y2);
 }
 
-int gui_get_font_height(GuiDrawContext_t draw_context)
+int gui_get_font_height(GuiDrawContext_t * draw_context)
 {
 	// TODO
 	return 0;
 }
 
-void gui_write_text(GuiDrawContext_t draw_context, int x, int y, const char * text)
+void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * text)
 {
-	int previous_mode = SetBkMode(draw_context.hdc, TRANSPARENT);
-	TextOut(draw_context.hdc, x, y, text, strlen(text));
-	SetBkMode(draw_context.hdc, previous_mode);
+	int previous_mode = SetBkMode(draw_context->hdc, TRANSPARENT);
+	TextOut(draw_context->hdc, x, y, text, strlen(text));
+	SetBkMode(draw_context->hdc, previous_mode);
 }
 
 // Windows graphical applications must have a specific WinMain entry point (at least when compiled with the Watcom compiler)

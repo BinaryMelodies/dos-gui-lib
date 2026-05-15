@@ -23,7 +23,7 @@ void gui_terminate_main_loop(void);
 /** Displays a modal dialog **/
 int gui_message_box(const char * title, const char * message, GuiMessageBoxButtonSet_t buttons, int default_button, GuiMessageBoxIcon_t icon);
 
-/* Window management */
+/* * * Window management * * */
 /** Creates and displays a window with the specified title, coordinates and dimensions **/
 GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h);
 /** Tells the GUI that the window can be disposed of **/
@@ -35,23 +35,23 @@ void gui_window_redraw(GuiWindow_t window);
 /** Informs the GUI that the window is currently being drawn to, to be called within the redraw callback **/
 GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window);
 /** Informs the GUI that the window has finished being drawn to, to be called within the redraw callback **/
-void gui_window_end_draw(GuiDrawContext_t draw_context);
+void gui_window_end_draw(GuiDrawContext_t * draw_context);
 
-/* Drawing tools */
+/* * * Drawing tools * * */
 /** Sets the current drawing color to black **/
-void gui_set_color_black(GuiDrawContext_t draw_context);
+void gui_set_color_black(GuiDrawContext_t * draw_context);
 /** Sets the current drawing color to white **/
-void gui_set_color_white(GuiDrawContext_t draw_context);
+void gui_set_color_white(GuiDrawContext_t * draw_context);
 /** Fills a rectangle whose borders are parallel to the axes with the current color **/
-void gui_fill_rectangle(GuiDrawContext_t draw_context, int x, int y, int w, int h);
+void gui_fill_rectangle(GuiDrawContext_t * draw_context, int x, int y, int w, int h);
 /** Draws a line segment **/
-void gui_draw_line(GuiDrawContext_t draw_context, int x1, int y1, int x2, int y2);
+void gui_draw_line(GuiDrawContext_t * draw_context, int x1, int y1, int x2, int y2);
 /** Fetches the full height of the current font, which can be used to calculate the distance between lines **/
-int gui_get_font_height(GuiDrawContext_t draw_context);
+int gui_get_font_height(GuiDrawContext_t * draw_context);
 /** Displays text using the current font, at the upper left corner of the text provided **/
-void gui_write_text(GuiDrawContext_t draw_context, int x, int y, const char * text);
+void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * text);
 
-/* Event management */
+/* * * Event management * * */
 /** Retrieves the key code associated with the key event **/
 GuiKey_t gui_get_keycode(GuiKeyEvent_t event);
 /** Retrieves the coordinates of the cursor at the moment this event was issued **/
@@ -63,7 +63,7 @@ GuiMouseButton_t gui_is_double_click(GuiMouseButtonEvent_t event);
 /** Retrieves the coordinates of the cursor at the moment this event was issued **/
 GuiPoint_t gui_get_mouse_move_coordinates(GuiMouseMoveEvent_t event);
 
-/* Callbacks */
+/* * * Callbacks * * */
 typedef bool gui_callback_show_t(GuiWindow_t window);
 /** Callback for displaying the window contents, must be registered before creating any windows **/
 void gui_register_callback_show(gui_callback_show_t far * show);
@@ -96,7 +96,7 @@ typedef bool gui_callback_quit_t(GuiWindow_t window);
 /** Callback when the window is closed by the user, must be registered before creating any windows **/
 void gui_register_callback_quit(gui_callback_quit_t far * quit);
 
-/* Main entry point, must be defined */
+/* * * Main entry point, must be defined * * */
 extern int gui_main(GuiMainParameters_t parameters);
 
 #endif // __API_H
