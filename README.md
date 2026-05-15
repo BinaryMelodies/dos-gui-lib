@@ -17,8 +17,9 @@ Currently supported targets:
 * 16-bit and 32-bit versions of [Microsoft Windows](https://en.wikipedia.org/wiki/Microsoft_Windows)
 * 16-bit and 32-bit versions of [IBM OS/2](https://en.wikipedia.org/wiki/OS%2F2)
 
-All the sources are released under the MIT license, except for the file `external/watcom/cstrtw16.asm` which is based on the Watcom sources and is released under the [Sybase Open Watcom Public License](https://en.wikipedia.org/wiki/Sybase_Open_Watcom_Public_License).
-That file is optional for using the toolkit.
+All the sources are released under the MIT license, with two exceptions:
+* The GEM backend, to comply with the [GNU GPL 2.0 license](https://en.wikipedia.org/wiki/GNU_General_Public_License) of the OpenGEM SDK, is released under the GPL.
+* The file `external/watcom/cstrtw16.asm` which is based on the Watcom sources and is released under the [Sybase Open Watcom Public License](https://en.wikipedia.org/wiki/Sybase_Open_Watcom_Public_License). That file is optional for using the toolkit.
 
 ## Usage
 
