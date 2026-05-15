@@ -122,7 +122,16 @@ MRESULT EXPENTRY ClientWindowProcedure(
 			return 0;
 		}
 		break;
-// TODO: QUIT
+	case WM_COMMAND:
+		if(callback_action)
+			callback_action(hwnd, COMMANDMSG(&msg)->cmd, GUI_ACTION_CLICKED);
+		return 0;
+	//case WM_CLOSE: // TODO: should precede WM_DESTROY?
+	case WM_DESTROY:
+		if(callback_quit && callback_quit(hwnd))
+			return 0;
+		gui_terminate_main_loop();
+		return 0;
 	}
 
 	return WinDefWindowProc(hwnd, msg, mparam1, mparam2);
@@ -375,7 +384,7 @@ int gui_main_loop(void)
 
 void gui_terminate_main_loop(void)
 {
-	// TODO
+	WinPostMsg(NULL, WM_QUIT, 0, 0);
 }
 
 void gui_window_destroy(GuiWindow_t win)
@@ -565,14 +574,27 @@ void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * 
 	//GpiCharString(draw_context->hps, strlen(text), (char *)text);
 }
 
-GuiWidget_t gui_create_root(GuiWindow_t window)
+HWND * gui_objects = NULL;
+size_t gui_objects_count = 0;
+
+static GuiWidget_t gui_register_widget(HWND hWnd)
 {
-	return 0; // TODO
+	GuiWidget_t index = gui_objects_count++;
+	if(gui_objects)
+	{
+		gui_objects = realloc(gui_objects, gui_objects_count * sizeof(HWND));
+	}
+	else
+	{
+		gui_objects = malloc(gui_objects_count * sizeof(HWND));
+	}
+	gui_objects[index] = hWnd;
+	return index;
 }
 
 GuiWidget_t gui_create_push_button(GuiWindow_t window, GuiWidget_t parent, int x, int y, int w, int h, const char far * caption, long flags)
 {
-	return 0; // TODO
+	return gui_register_widget(WinCreateWindow(window, WC_BUTTON, caption, WS_VISIBLE | BS_PUSHBUTTON, x, fix_ycoord(window, y), w, h, parent, HWND_BOTTOM, gui_objects_count, NULL, NULL));
 }
 
 int main(int argc, char ** argv, char ** envp)
