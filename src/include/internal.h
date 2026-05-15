@@ -18,6 +18,7 @@ extern gui_callback_mouse_button_t far * callback_mouse_button_press;
 extern gui_callback_mouse_button_t far * callback_mouse_button_release;
 extern gui_callback_mouse_move_t far * callback_mouse_move;
 extern gui_callback_quit_t far * callback_quit;
+extern gui_callback_action_t far * callback_action;
 
 extern GuiMouseButton_t callback_mouse_buttons_mask;
 extern GuiMouseButton_t callback_click_count_mask;

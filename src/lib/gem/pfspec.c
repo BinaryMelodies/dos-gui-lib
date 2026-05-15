@@ -282,6 +282,14 @@ static bool gui_running;
 static bool gui_mouse_position_known = false;
 static GuiPoint_t gui_last_mouse_position;
 
+static bool gui_click_action(struct gui_widgets * widgets, WORD object, WORD clicks, WORD * pnext)
+{
+	bool to_continue = form_button(widgets->objects, object, clicks, pnext);
+	if(callback_action && !gui_last_button_state)
+		callback_action(widgets->window, object, GUI_ACTION_CLICKED);
+	return to_continue;
+}
+
 // parts of it based on form_do
 int gui_main_loop(void)
 {
@@ -469,21 +477,21 @@ int gui_main_loop(void)
 				{
 					WORD discard;
 					if(widgets->next_obj != widgets->edit_obj)
-						gui_running = form_button(widgets->objects, widgets->next_obj, 1, &discard);
+						gui_running &= gui_click_action(widgets, widgets->edit_obj, 1, &discard);
 					widgets->edit_obj = widgets->next_obj;
-					gui_running = form_button(widgets->objects, widgets->next_obj, 1, &widgets->next_obj);
+					gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
 				}
 				break;
 			case 0x3920: // SPACE
 				widgets->next_obj = widgets->edit_obj;
 				objc_set_highlighted(widgets->window, widgets->objects, widgets->edit_obj, false);
-				gui_running = form_button(widgets->objects, widgets->next_obj, 1, &widgets->next_obj);
+				gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
 				objc_set_highlighted(widgets->window, widgets->objects, widgets->edit_obj, true);
 				break;
 			case 0x4B00: // LEFT
 				if(widgets->objects[widgets->edit_obj].ob_flags & EDITABLE && widgets->index != 0)
 				{
-					gui_running = form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
+					gui_running &= form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
 					break;
 				}
 				// fallthru
@@ -512,7 +520,7 @@ int gui_main_loop(void)
 			case 0x4D00: // RIGHT
 				if((widgets->objects[widgets->edit_obj].ob_flags & EDITABLE) && widgets->index < _fstrlen(((TEDINFO far *)widgets->objects[widgets->edit_obj].ob_spec)->te_ptext))
 				{
-					gui_running = form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
+					gui_running &= form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
 					break;
 				}
 				// fallthru
@@ -541,7 +549,7 @@ int gui_main_loop(void)
 					{
 						objc_set_highlighted(widgets->window, widgets->objects, widgets->edit_obj, false);
 						widgets->next_obj = widgets->edit_obj = esc_obj;
-						gui_running = form_button(widgets->objects, widgets->next_obj, 1, &widgets->next_obj);
+						gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
 					}
 				}
 				break;
@@ -550,7 +558,7 @@ int gui_main_loop(void)
 				widgets->next_obj = objc_find_following(widgets->objects, ROOT, NIL, FMD_FORWARD, SCROLLER);
 				if(widgets->next_obj == NIL)
 					widgets->next_obj = ROOT;
-				gui_running = form_button(widgets->objects, widgets->next_obj, 1, &widgets->next_obj);
+				gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
 				break;
 			/* TODO: does not seem to work */
 			case 0x5100: // P_DOWN (page down)
@@ -561,11 +569,11 @@ int gui_main_loop(void)
 					if(widgets->next_obj == NIL)
 						widgets->next_obj = last_obj;
 				}
-				gui_running = form_button(widgets->objects, widgets->next_obj, 1, &widgets->next_obj);
+				gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
 				break;
 			default:
 				// TODO: handle shortcuts
-				gui_running = form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
+				gui_running &= form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
 				break;
 			}
 
@@ -612,7 +620,6 @@ int gui_main_loop(void)
 					}
 				}
 			}
-			gui_last_button_state ^= true;
 
 			/* widget handling */
 			widgets->next_obj = objc_find(widgets->objects, ROOT, MAX_DEPTH, mouse_x, mouse_y);
@@ -622,8 +629,10 @@ int gui_main_loop(void)
 			}
 			else
 			{
-				gui_running = form_button(widgets->objects, widgets->next_obj, click_count, &widgets->next_obj);
+				gui_running &= gui_click_action(widgets, widgets->next_obj, click_count, &widgets->next_obj);
 			}
+
+			gui_last_button_state ^= true;
 		}
 
 		if((which & MU_M1) != 0 && callback_mouse_move)

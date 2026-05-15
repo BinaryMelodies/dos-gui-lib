@@ -11,6 +11,7 @@ gui_callback_mouse_button_t far * callback_mouse_button_press = NULL;
 gui_callback_mouse_button_t far * callback_mouse_button_release = NULL;
 gui_callback_mouse_move_t far * callback_mouse_move = NULL;
 gui_callback_quit_t far * callback_quit = NULL;
+gui_callback_action_t far * callback_action = NULL;
 
 GuiMouseButton_t callback_mouse_buttons_mask = 0;
 GuiMouseButton_t callback_click_count_mask = 0;
@@ -59,5 +60,10 @@ void gui_register_callback_mouse_move(gui_callback_mouse_move_t far * mouse_move
 void gui_register_callback_quit(gui_callback_quit_t far * quit)
 {
 	callback_quit = quit;
+}
+
+void gui_register_callback_action(gui_callback_action_t far * action)
+{
+	callback_action = action;
 }
 

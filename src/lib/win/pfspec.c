@@ -108,6 +108,10 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if(callback_show && callback_show(hWnd))
 			return 0;
 		break;
+	case WM_COMMAND:
+		if(callback_action)
+			callback_action(hWnd, LOWORD(wParam), GUI_ACTION_CLICKED);
+		return 0;
 
 	//case WM_CLOSE: // TODO: should precede WM_DESTROY?
 	case WM_DESTROY:

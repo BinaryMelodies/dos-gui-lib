@@ -139,6 +139,12 @@ enum
 	GUI_WINPOS_MAXIMUM = -2,
 };
 
+/* Action types */
+enum
+{
+	GUI_ACTION_CLICKED = 0,
+};
+
 /* Index counter for widgets */
 typedef uint16_t GuiWidget_t;
 

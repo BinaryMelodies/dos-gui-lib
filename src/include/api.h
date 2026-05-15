@@ -101,6 +101,10 @@ void gui_register_callback_quit(gui_callback_quit_t far * quit);
 GuiWidget_t gui_create_push_button(GuiWindow_t window, GuiWidget_t parent, int x, int y, int w, int h, const char far * caption, long flags);
 #define GuiWindowRoot ((GuiWidget_t) 0)
 
+typedef void gui_callback_action_t(GuiWindow_t window, GuiWidget_t widget, int parameter);
+/** Callback for responding to behavior from interacting with the widget **/
+void gui_register_callback_action(gui_callback_action_t far * action);
+
 /* * * Main entry point, must be defined * * */
 extern int gui_main(GuiMainParameters_t parameters);
 
