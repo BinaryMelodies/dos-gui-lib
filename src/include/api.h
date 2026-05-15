@@ -96,6 +96,11 @@ typedef bool gui_callback_quit_t(GuiWindow_t window);
 /** Callback when the window is closed by the user, must be registered before creating any windows **/
 void gui_register_callback_quit(gui_callback_quit_t far * quit);
 
+/* * * Graphical widgets * * */
+/* Creates a push button */
+GuiWidget_t gui_create_push_button(GuiWindow_t window, GuiWidget_t parent, int x, int y, int w, int h, const char far * caption, long flags);
+#define GuiWindowRoot ((GuiWidget_t) 0)
+
 /* * * Main entry point, must be defined * * */
 extern int gui_main(GuiMainParameters_t parameters);
 

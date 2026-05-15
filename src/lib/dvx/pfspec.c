@@ -901,6 +901,16 @@ void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * 
 	free(item);
 }
 
+GuiWidget_t gui_create_root(GuiWindow_t window)
+{
+	return 0; // TODO
+}
+
+GuiWidget_t gui_create_push_button(GuiWindow_t window, GuiWidget_t parent, int x, int y, int w, int h, const char far * caption, long flags)
+{
+	return 0; // TODO
+}
+
 int main(int argc, char ** argv, char ** envp)
 {
 	GuiMainParameters_t parameters;

@@ -139,4 +139,7 @@ enum
 	GUI_WINPOS_MAXIMUM = -2,
 };
 
+/* Index counter for widgets */
+typedef uint16_t GuiWidget_t;
+
 #endif // __TYPES_H

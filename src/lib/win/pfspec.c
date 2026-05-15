@@ -621,6 +621,34 @@ void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * 
 	SetBkMode(draw_context->hdc, previous_mode);
 }
 
+HWND * gui_objects = NULL;
+size_t gui_objects_count = 0;
+
+static GuiWidget_t gui_register_widget(HWND hWnd)
+{
+	GuiWidget_t index = gui_objects_count++;
+	if(gui_objects)
+	{
+		gui_objects = realloc(gui_objects, gui_objects_count * sizeof(HWND));
+	}
+	else
+	{
+		gui_objects = malloc(gui_objects_count * sizeof(HWND));
+	}
+	gui_objects[index] = hWnd;
+	return index;
+}
+
+GuiWidget_t gui_create_root(GuiWindow_t window)
+{
+	return gui_register_widget(window);
+}
+
+GuiWidget_t gui_create_push_button(GuiWindow_t window, GuiWidget_t parent, int x, int y, int w, int h, const char far * caption, long flags)
+{
+	return gui_register_widget(CreateWindow("BUTTON", caption, WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, x, y, w, h, window, (HMENU) gui_objects_count, NULL, NULL));
+}
+
 // Windows graphical applications must have a specific WinMain entry point (at least when compiled with the Watcom compiler)
 #if __I86__ || !__NT__
 int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
