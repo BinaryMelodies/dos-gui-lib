@@ -12,11 +12,223 @@
 
 #define MAX(a, b) ((a) >= (b) ? (a) : (b))
 
+typedef enum gui_panel_type_t
+{
+	// clicking it will not change its state
+	GUI_PANEL_STATIC,
+	// clicking it will flash the state between the current and alternative states
+	GUI_PANEL_CLICKABLE,
+	// clicking it will toggle between states
+	GUI_PANEL_TOGGLABLE,
+} gui_panel_type_t;
+
+typedef struct gui_tab_stop_t
+{
+	int16_t panel_index;
+} gui_tab_stop_t;
+
+typedef struct gui_panel_t
+{
+	uint16_t x, y, width, height, depth;
+	bool impressed;
+	gui_panel_type_t type;
+} gui_panel_t;
+
+typedef struct gui_widget_set_t
+{
+	GuiWindow_t window;
+	gui_panel_t * panels;
+	size_t panel_count;
+	gui_tab_stop_t * tab_stops;
+	size_t tab_stop_count;
+	size_t focus;
+} gui_widget_set_t;
+
+gui_widget_set_t * gui_widget_set;
+size_t gui_widget_set_count;
+
+static void gui_widget_set_register(GuiWindow_t window)
+{
+	size_t index = gui_widget_set_count++;
+	if(gui_widget_set)
+	{
+		gui_widget_set = realloc(gui_widget_set, gui_widget_set_count * sizeof(gui_widget_set_t));
+	}
+	else
+	{
+		gui_widget_set = malloc(gui_widget_set_count * sizeof(gui_widget_set_t));
+	}
+	gui_widget_set[index].window = window;
+	gui_widget_set[index].panels = NULL;
+	gui_widget_set[index].panel_count = 0;
+	gui_widget_set[index].tab_stops = NULL;
+	gui_widget_set[index].tab_stop_count = 0;
+	gui_widget_set[index].focus = 0;
+}
+
+static gui_widget_set_t * gui_obtain_widgets(GuiWindow_t window)
+{
+	size_t index;
+	for(index = 0; index < gui_widget_set_count; index ++)
+	{
+		if(gui_widget_set[index].window == window)
+			return &gui_widget_set[index];
+	}
+	return NULL;
+}
+
+static void gui_window_dispose_widget_set(gui_widget_set_t * widgets)
+{
+	size_t index = widgets - gui_widget_set;
+	if(index != gui_widget_set_count - 1)
+	{
+		memcpy(&gui_widget_set[index], &gui_widget_set[gui_widget_set_count - 1], sizeof(gui_widget_set_t));
+	}
+
+	if(--gui_widget_set_count > 0)
+	{
+		gui_widget_set = realloc(gui_widget_set, gui_widget_set_count * sizeof(gui_widget_set_t));
+	}
+	else
+	{
+		free(gui_widget_set);
+		gui_widget_set = NULL;
+	}
+}
+
+static void gui_attach_focusable(gui_widget_set_t * widget_set, int16_t panel_index)
+{
+	size_t index = widget_set->tab_stop_count++;
+	if(widget_set->tab_stops)
+	{
+		widget_set->tab_stops = realloc(widget_set->tab_stops, widget_set->tab_stop_count * sizeof(gui_tab_stop_t));
+	}
+	else
+	{
+		widget_set->tab_stops = malloc(widget_set->tab_stop_count * sizeof(gui_tab_stop_t));
+	}
+	widget_set->tab_stops[index].panel_index = panel_index;
+}
+
+static size_t gui_attach_panel(gui_widget_set_t * widget_set,
+	uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t depth,
+	bool impressed,
+	bool focusable,
+	gui_panel_type_t type)
+{
+	size_t index = widget_set->panel_count++;
+	if(widget_set->panels)
+	{
+		widget_set->panels = realloc(widget_set->panels, widget_set->panel_count * sizeof(gui_panel_t));
+	}
+	else
+	{
+		widget_set->panels = malloc(widget_set->panel_count * sizeof(gui_panel_t));
+	}
+	widget_set->panels[index].x = x;
+	widget_set->panels[index].y = y;
+	widget_set->panels[index].width = width;
+	widget_set->panels[index].height = height;
+	widget_set->panels[index].depth = depth;
+	widget_set->panels[index].impressed = impressed;
+	widget_set->panels[index].type = type;
+	if(focusable)
+	{
+		gui_attach_focusable(widget_set, index);
+	}
+	return index;
+}
+
 xcb_connection_t * connection;
 xcb_screen_t * screen;
 
 xcb_intern_atom_reply_t * WM_PROTOCOLS;
 xcb_intern_atom_reply_t * WM_DELETE_WINDOW;
+
+uint32_t lightgray_pixel;
+uint32_t darkgray_pixel;
+
+static void gui_panel_draw(GuiWindow_t window, xcb_gcontext_t gc, gui_panel_t * gui_panel, bool focused)
+{
+	int j;
+	for(j = 0; j < gui_panel->depth; j++)
+	{
+		uint32_t value;
+		xcb_segment_t segments[2];
+
+		value = screen->white_pixel;
+		segments[0].x1 = gui_panel->x + j;
+		segments[0].y1 = gui_panel->y + gui_panel->height - 1 - j;
+		segments[0].x2 = gui_panel->x + j;
+		segments[0].y2 = gui_panel->y + j;
+
+		segments[1].x1 = gui_panel->x + j;
+		segments[1].y1 = gui_panel->y + j;
+		segments[1].x2 = gui_panel->x + gui_panel->width - 2 - j;
+		segments[1].y2 = gui_panel->y + j;
+
+		xcb_change_gc(connection, gc, XCB_GC_FOREGROUND, &value);
+		xcb_poly_segment(connection, window, gc, 2, segments);
+
+		value = darkgray_pixel;
+		segments[0].x1 = gui_panel->x + gui_panel->width - 1 - j;
+		segments[0].y1 = gui_panel->y + j;
+		segments[0].x2 = gui_panel->x + gui_panel->width - 1 - j;
+		segments[0].y2 = gui_panel->y + gui_panel->height - 1 - j;
+
+		segments[1].x1 = gui_panel->x + gui_panel->width - 1 - j;
+		segments[1].y1 = gui_panel->y + gui_panel->height - 1 - j;
+		segments[1].x2 = gui_panel->x + j + 1;
+		segments[1].y2 = gui_panel->y + gui_panel->height - 1 - j;
+
+		xcb_change_gc(connection, gc, XCB_GC_FOREGROUND, &value);
+		xcb_poly_segment(connection, window, gc, 2, segments);
+	}
+
+	{
+		uint32_t value = lightgray_pixel;
+		xcb_rectangle_t rectangle;
+
+		rectangle.x      = gui_panel->x + gui_panel->depth;
+		rectangle.y      = gui_panel->y + gui_panel->depth;
+		rectangle.width  = gui_panel->width - 2 * gui_panel->depth;
+		rectangle.height = gui_panel->height - 2 * gui_panel->depth;
+
+		xcb_change_gc(connection, gc, XCB_GC_FOREGROUND, &value);
+		xcb_poly_fill_rectangle(connection, window, gc, 1, &rectangle);
+	}
+
+	if(focused)
+	{
+		uint32_t value;
+		xcb_segment_t segments[4];
+		int j = gui_panel->depth + 1;
+
+		value = screen->white_pixel;
+		segments[0].x1 = gui_panel->x + j;
+		segments[0].y1 = gui_panel->y + gui_panel->height - 1 - j;
+		segments[0].x2 = gui_panel->x + j;
+		segments[0].y2 = gui_panel->y + j;
+
+		segments[1].x1 = gui_panel->x + j;
+		segments[1].y1 = gui_panel->y + j;
+		segments[1].x2 = gui_panel->x + gui_panel->width - 2 - j;
+		segments[1].y2 = gui_panel->y + j;
+
+		segments[2].x1 = gui_panel->x + gui_panel->width - 1 - j;
+		segments[2].y1 = gui_panel->y + j;
+		segments[2].x2 = gui_panel->x + gui_panel->width - 1 - j;
+		segments[2].y2 = gui_panel->y + gui_panel->height - 1 - j;
+
+		segments[3].x1 = gui_panel->x + gui_panel->width - 1 - j;
+		segments[3].y1 = gui_panel->y + gui_panel->height - 1 - j;
+		segments[3].x2 = gui_panel->x + j + 1;
+		segments[3].y2 = gui_panel->y + gui_panel->height - 1 - j;
+
+		xcb_change_gc(connection, gc, XCB_GC_FOREGROUND, &value);
+		xcb_poly_segment(connection, window, gc, 4, segments);
+	}
+}
 
 void gui_init(GuiMainParameters_t * parameters)
 {
@@ -31,6 +243,27 @@ void gui_init(GuiMainParameters_t * parameters)
 	WM_DELETE_WINDOW = xcb_intern_atom_reply(connection, cookie_WM_DELETE_WINDOW, 0);
 
 	screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+
+	{
+		xcb_alloc_color_reply_t * lightgray_reply =
+			xcb_alloc_color_reply(
+				connection,
+				xcb_alloc_color(connection, screen->default_colormap, 0xAAAA, 0xAAAA, 0xAAAA),
+				NULL);
+		lightgray_pixel = lightgray_reply->pixel;
+		free(lightgray_reply);
+	}
+
+	{
+		xcb_alloc_color_reply_t * darkgray_reply =
+			xcb_alloc_color_reply(
+				connection,
+				xcb_alloc_color(connection, screen->default_colormap, 0x5555, 0x5555, 0x5555),
+				NULL);
+		if(darkgray_reply->red == 0 && darkgray_reply->green == 0 && darkgray_reply->blue == 0)
+			darkgray_pixel = screen->black_pixel;
+		free(darkgray_reply);
+	}
 }
 
 void gui_terminate(void)
@@ -429,6 +662,8 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 		event_mask |= XCB_EVENT_MASK_BUTTON_RELEASE;
 	if(callback_mouse_move != 0)
 		event_mask |= XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_BUTTON_MOTION;
+	if(callback_action != 0)
+		event_mask |= XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE;
 
 	if(x == GUI_WINPOS_DEFAULT)
 		x = 0; // TODO
@@ -452,17 +687,36 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 
 	_init_window(window, window_title, x, y, w, h, event_mask);
 
+	gui_widget_set_register(window);
+
 	return window;
 }
 
 static void _window_redraw(GuiWindow_t window)
 {
-	if(callback_show)
+	gui_widget_set_t * widget_set = gui_obtain_widgets(window);
+	bool needs_flushing = callback_show && callback_show(window);
+
+	if(widget_set->panel_count > 0)
 	{
-		if(callback_show(window))
+		size_t index;
+		uint32_t values[3];
+		xcb_gcontext_t gc = xcb_generate_id(connection);
+		xcb_create_gc(connection, gc, screen->root, 0, NULL);
+
+		for(index = 0; index < widget_set->panel_count; index++)
 		{
-			xcb_flush(connection);
+			gui_panel_draw(window, gc, &widget_set->panels[index], widget_set->tab_stops[widget_set->focus].panel_index == index);
 		}
+
+		xcb_free_gc(connection, gc);
+
+		needs_flushing = true;
+	}
+
+	if(needs_flushing)
+	{
+		xcb_flush(connection);
 	}
 }
 
@@ -648,6 +902,24 @@ int gui_main_loop(void)
 					callback_mouse_button_press(((xcb_button_press_event_t *)event)->event, button_event);
 					xcb_flush(connection);
 				}
+
+				{
+					int i;
+					xcb_button_press_event_t * button_event = (xcb_button_press_event_t *)event;
+					gui_widget_set_t * widget_set = gui_obtain_widgets(button_event->event);
+					for(i = 0; i < widget_set->tab_stop_count; i++)
+					{
+						size_t panel_index = widget_set->tab_stops[i].panel_index;
+						gui_panel_t * gui_panel = &widget_set->panels[panel_index];
+						if(button_event->event_x >= gui_panel->x && button_event->event_x < gui_panel->x + gui_panel->width
+						&& button_event->event_y >= gui_panel->y && button_event->event_y < gui_panel->y + gui_panel->height)
+						{
+							if(callback_action)
+								callback_action(button_event->event, panel_index, GUI_ACTION_CLICKED);
+							break;
+						}
+					}
+				}
 				break;
 			case XCB_BUTTON_RELEASE:
 				if(callback_mouse_button_release)
@@ -695,6 +967,7 @@ void gui_terminate_main_loop(void)
 void gui_window_destroy(GuiWindow_t window)
 {
 	xcb_destroy_window(connection, window);
+	gui_window_dispose_widget_set(gui_obtain_widgets(window));
 }
 
 static const GuiKey_t keycodes[256] =
@@ -903,7 +1176,12 @@ void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * 
 
 GuiWidget_t gui_create_push_button(GuiWindow_t window, GuiWidget_t parent, int x, int y, int w, int h, const char far * caption, long flags)
 {
-	return 0; // TODO
+	// TODO: parent is currently ignored
+	return gui_attach_panel(
+		gui_obtain_widgets(window),
+		x, y, w, h, 2, false, true, GUI_PANEL_CLICKABLE);
+	// TODO: use caption
+	// TODO: add black border
 }
 
 int main(int argc, char ** argv, char ** envp)
