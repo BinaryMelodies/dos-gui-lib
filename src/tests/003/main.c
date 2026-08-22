@@ -5,7 +5,7 @@
 #include <string.h>
 #include "libc.h"
 
-#if GUI_WIN
+#if GUI_WIN || GUI_MGW
 # define GUINAME "Windows"
 #elif GUI_GEM
 # define GUINAME "GEM"

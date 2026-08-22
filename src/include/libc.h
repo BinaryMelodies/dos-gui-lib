@@ -9,8 +9,12 @@
 # define far
 #endif
 
+#if !__MINGW32__
 /* Watcom's sprintf does not work under Windows 1.0-3.0, only 3.1 */
 /** Prints a formatted string to a (far) pointer, writing at most the specified number of bytes **/
 int _fsnprintf(char far * str, size_t n, const char far * fmt, ...);
+#else
+# define _fsnprintf snprintf
+#endif
 
 #endif // _LIBC_H

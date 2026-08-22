@@ -1,11 +1,11 @@
 
 all: $(BINDIR)/$(PLATFORM)/002$(VERSION)$(EXESFX)
 
-$(OBJDIR)/002/$(PLATFORM)/%$(VERSION).obj: %.c
+$(OBJDIR)/002/$(PLATFORM)/%$(VERSION)$(OBJSFX): %.c
 	mkdir -p `dirname $@`
-	$(WCL) -q $(CFLAGS) $< -c -fo=$@ -dGUI_`echo $(PLATFORM) | tr [:lower:] [:upper:]`
+	$(CC) $(CFLAGS) $< -c $(CCOUT)$@ $(CCDEF)GUI_`echo $(PLATFORM) | tr [:lower:] [:upper:]`
 
-$(BINDIR)/$(PLATFORM)/002$(VERSION)$(LNKSFX): $(OBJDIR)/002/$(PLATFORM)/main$(VERSION).obj $(LIBS)
+$(BINDIR)/$(PLATFORM)/002$(VERSION)$(LNKSFX): $(OBJDIR)/002/$(PLATFORM)/main$(VERSION)$(OBJSFX) $(LIBS)
 	mkdir -p `dirname $@`
-	wlink option quiet file $< name $@ $(LDFLAGS)
+	$(LD) $< $(LDOUT) $@ $(LDFLAGS)
 

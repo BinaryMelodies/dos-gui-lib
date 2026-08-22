@@ -1,0 +1,11 @@
+
+# Makefile for Windows/MinGW (64-bit)
+
+PLATFORM=mgw
+USING=win
+LIBSUFFIX=64
+GCC=x86_64-w64-mingw32-gcc
+CFLAGS=
+
+include ../Makefile.template
+

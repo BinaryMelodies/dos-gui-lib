@@ -17,5 +17,6 @@ CFLAGS=-bt=os2_pm -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM) -s -ml
 LDFLAGS=system os2_pm libpath $(BINDIR)/lib/$(PLATFORM) lib dtk-l
 LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk-l.lib
 
+include mfs/Makefile.watcom
 include Makefile.main
 

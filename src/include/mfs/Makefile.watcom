@@ -1,0 +1,9 @@
+
+CC=$(WCL)
+OBJSFX=.obj
+CFLAGS+= -q
+CCOUT=-fo=
+CCDEF=-d
+LD=wlink option quiet file
+LDOUT=name
+

@@ -5,7 +5,7 @@
 #include <string.h>
 #include "libc.h"
 
-#if GUI_WIN
+#if GUI_WIN || GUI_MGW
 # define GUINAME "Windows"
 #elif GUI_GEM
 # define GUINAME "GEM"
@@ -61,12 +61,14 @@ int gui_main(GuiMainParameters_t parameters)
 	window = gui_window_create(GUINAME
 #if __I86__
 	" (16-bit)",
-#elif __386__
+#elif __386__ || __i386__
 # if __WINDOWS__ && !__NT__
 	" (386)",
 # else
 	" (32-bit)",
 # endif
+#elif __amd64__
+	" (64-bit)",
 #endif
 		10, 20, 400, 300);
 

@@ -7,7 +7,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <i86.h>
+#if !__MINGW32__
+# include <i86.h>
+#endif
 
 // The window class name of all windows created by this library
 #define WINDOW_CLASS_NAME "GenericMainWindow"

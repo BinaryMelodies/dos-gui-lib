@@ -1,0 +1,21 @@
+
+#### Makefile for Windows/MinGW (32-bit)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+VERSION=_32
+PLATFORM=mgw
+USING=win
+EXESFX=.exe
+LNKSFX=$(EXESFX)
+GCC=i686-w64-mingw32-gcc
+LD=i686-w64-mingw32-gcc
+CFLAGS=-I$(INCDIR) -I$(INCDIR)/$(USING)
+LDFLAGS=-L$(BINDIR)/lib/$(PLATFORM) -ldtk32 -lgdi32
+LIBS=$(BINDIR)/lib/$(PLATFORM)/libdtk32.a
+
+include mfs/Makefile.gnu
+include Makefile.main
+

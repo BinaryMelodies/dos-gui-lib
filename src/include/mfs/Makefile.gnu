@@ -1,0 +1,7 @@
+
+CC=$(GCC)
+OBJSFX=.o
+CCOUT=-o
+CCDEF=-D
+LDOUT=-o
+

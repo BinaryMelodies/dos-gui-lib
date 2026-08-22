@@ -1,0 +1,20 @@
+
+# Template using Watcom
+
+OBJFILES=$(patsubst %.c,$(OBJDIR)/$(PLATFORM)/%$(LIBSUFFIX).obj,$(notdir $(SRCFILES)))
+
+$(BINDIR)/lib/$(PLATFORM)/dtk$(LIBSUFFIX).lib: $(OBJFILES) $(HDRFILES)
+	mkdir -p `dirname $@`
+	rm -f $@
+	wlib -q $@ $(patsubst %,+%,$(OBJFILES))
+
+$(OBJDIR)/$(PLATFORM)/%$(LIBSUFFIX).obj: $(SRCDIR)/%.c $(HDRFILES)
+	echo $(PATH)
+	echo $(INCLUDE)
+	mkdir -p `dirname $@`
+	$(WCL) -q $(CFLAGS) $< -c -fo=$@ -i=$(INCDIR) -i=$(INCDIR)/$(USING)
+
+$(OBJDIR)/$(PLATFORM)/%$(LIBSUFFIX).obj: $(SRCDIR)/$(USING)/%.c $(HDRFILES)
+	mkdir -p `dirname $@`
+	$(WCL) -q $(CFLAGS) $< -c -fo=$@ -i=$(INCDIR) -i=$(INCDIR)/$(USING)
+

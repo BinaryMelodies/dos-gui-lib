@@ -1,24 +1,23 @@
 
 # Template for all targets
 
+ifndef USING
+USING=$(PLATFORM)
+endif
+
 SRCDIR=..
 BINDIR=../../../bin
 OBJDIR=../../../obj
 INCDIR=../../include
-SRCFILES+=$(SRCDIR)/common.c $(SRCDIR)/libc.c $(SRCDIR)/$(PLATFORM)/pfspec.c
-OBJFILES=$(patsubst %.c,$(OBJDIR)/$(PLATFORM)/%$(LIBSUFFIX).obj,$(notdir $(SRCFILES)))
+SRCFILES+=$(SRCDIR)/common.c $(SRCDIR)/$(USING)/pfspec.c
+ifndef GCC
+SRCFILES+= $(SRCDIR)/libc.c
+endif
 HDRFILES+=$(INCDIR)/api.h $(INCDIR)/libc.h $(INCDIR)/types.h $(INCDIR)/internal.h
 
-$(BINDIR)/lib/$(PLATFORM)/dtk$(LIBSUFFIX).lib: $(OBJFILES) $(HDRFILES)
-	mkdir -p `dirname $@`
-	rm -f $@
-	wlib -q $@ $(patsubst %,+%,$(OBJFILES))
-
-$(OBJDIR)/$(PLATFORM)/%$(LIBSUFFIX).obj: $(SRCDIR)/%.c $(HDRFILES)
-	mkdir -p `dirname $@`
-	$(WCL) -q $(CFLAGS) $< -c -fo=$@ -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM)
-
-$(OBJDIR)/$(PLATFORM)/%$(LIBSUFFIX).obj: $(SRCDIR)/$(PLATFORM)/%.c $(HDRFILES)
-	mkdir -p `dirname $@`
-	$(WCL) -q $(CFLAGS) $< -c -fo=$@ -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM)
+ifdef GCC
+include ../Makefile.gnu
+else
+include ../Makefile.watcom
+endif
 

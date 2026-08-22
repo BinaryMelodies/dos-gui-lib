@@ -17,5 +17,6 @@ CFLAGS=-bt=dos -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM) -ml
 LDFLAGS=system dos libpath $(BINDIR)/lib/$(PLATFORM) lib gembnd-l lib dtk-l
 LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk-l.lib
 
+include mfs/Makefile.watcom
 include Makefile.main
 

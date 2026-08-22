@@ -17,6 +17,7 @@ CFLAGS=-bt=windows -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM)
 LDFLAGS=system win386 libpath $(BINDIR)/lib/$(PLATFORM) lib dtk386
 LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk386.lib
 
+include mfs/Makefile.watcom
 include Makefile.main
 
 %.exe: %.rex

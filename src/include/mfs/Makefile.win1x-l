@@ -13,9 +13,10 @@ PLATFORM=win
 EXESFX=.exe
 LNKSFX=$(EXESFX)
 WCL=wcl
-CFLAGS=-bt=windows -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM) -s -ml
+CFLAGS=-q -bt=windows -i=$(INCDIR) -i=$(INCDIR)/$(PLATFORM) -s -ml
 LDFLAGS=system windows2 memory font file $(BINDIR)/lib/win/win10l libpath $(BINDIR)/lib/$(PLATFORM) lib dtk1l
 LIBS=$(BINDIR)/lib/$(PLATFORM)/dtk1l.lib
 
+include mfs/Makefile.watcom
 include Makefile.main
 
