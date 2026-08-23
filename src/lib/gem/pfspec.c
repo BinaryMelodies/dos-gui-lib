@@ -757,7 +757,7 @@ int gui_message_box(const char * title, const char * message, GuiMessageBoxButto
 	return button_mapping[result];
 }
 
-GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h)
+GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h, GuiWindowState_t state)
 {
 	WORD window;
 
@@ -783,9 +783,14 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 
 	graf_mouse(M_OFF, 0L);
 	window = wind_create(NAME | CLOSER | MOVER | SIZER, x, y, w, h);
-	wind_set(window, WF_NAME, FP_OFF(window_title), FP_SEG(window_title), 0, 0);
+	if(window_title != NULL)
+	{
+		wind_set(window, WF_NAME, FP_OFF(window_title), FP_SEG(window_title), 0, 0);
+	}
 	wind_open(window, x, y, w, h);
 	graf_mouse(M_ON, 0L);
+
+	// TODO: state
 
 	gui_window_create_widgets(window);
 
@@ -800,6 +805,11 @@ void gui_window_destroy(GuiWindow_t window)
 	graf_mouse(M_ON, 0L);
 
 	gui_window_dispose_widgets(gui_obtain_widgets(window));
+}
+
+void gui_window_show(GuiWindow_t window, GuiWindowState_t state, GuiWindowStateAction_t action)
+{
+	// TODO
 }
 
 static const GuiKey_t keycodes[256] =

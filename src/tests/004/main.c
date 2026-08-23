@@ -72,7 +72,7 @@ int gui_main(GuiMainParameters_t parameters)
 #elif __amd64__
 	" (64-bit)",
 #endif
-		10, 20, 400, 300);
+		10, 20, 400, 300, GUI_WINDOW_STATE_DEFAULT);
 
 	button1 = gui_create_push_button(window, GuiWindowRoot, 10, 10 + 0 * 25, 380, 20, "Button 1", 0);
 	button2 = gui_create_push_button(window, GuiWindowRoot, 10, 10 + 1 * 25, 380, 20, "Button 2", 0);

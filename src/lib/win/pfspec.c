@@ -25,6 +25,7 @@ HINSTANCE hInstance;
 HINSTANCE hPrevInstance;
 LPSTR lpCmdLine;
 int nCmdShow;
+bool first_window_has_been_created;
 
 // The window procedure for all windows created by this library
 LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -321,9 +322,28 @@ int gui_message_box(const char * title, const char * message, GuiMessageBoxButto
 	return result;
 }
 
-GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h)
+GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h, GuiWindowState_t state)
 {
 	HWND hWnd;
+	char far * actual_title;
+
+	if(window_title != NULL)
+	{
+		actual_title = (char far *)window_title;
+	}
+	else
+	{
+		size_t actual_title_size = 8 + 1 + 3 + 1;
+		actual_title = malloc(actual_title_size);
+		GetModuleFileName(NULL, actual_title, actual_title_size);
+#if __NT__
+		while(GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+		{
+			actual_title = realloc(actual_title, actual_title_size += 8);
+			GetModuleFileName(NULL, actual_title, actual_title_size);
+		}
+#endif
+	}
 
 	if(x == GUI_WINPOS_DEFAULT)
 		x = CW_USEDEFAULT;
@@ -345,13 +365,121 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 	else if(h == GUI_WINPOS_MAXIMUM)
 		h = 200; // TODO: set to screen height
 
-	hWnd = CreateWindow(WINDOW_CLASS_NAME, window_title, WS_OVERLAPPEDWINDOW,
+	hWnd = CreateWindow(WINDOW_CLASS_NAME, actual_title, WS_OVERLAPPEDWINDOW,
 		x, y, w, h, NULL, NULL, hInstance, NULL);
 
-	ShowWindow(hWnd, nCmdShow);
+	if(actual_title != window_title)
+	{
+		free(actual_title);
+	}
+
+	if(!first_window_has_been_created)
+	{
+		/* Microsoft documentation expects the first call to be made with nCmdShow */
+		ShowWindow(hWnd, nCmdShow);
+	}
+
+	switch(state)
+	{
+	case GUI_WINDOW_STATE_NORMAL:
+		if(!first_window_has_been_created)
+		{
+			/* override default positioning */
+			ShowWindow(hWnd, SW_RESTORE);
+		}
+		else
+		{
+			ShowWindow(hWnd, SW_NORMAL);
+		}
+		break;
+	case GUI_WINDOW_STATE_ICONIFIED:
+		ShowWindow(hWnd, SW_SHOWMINIMIZED);
+		break;
+	case GUI_WINDOW_STATE_MAXIMIZED:
+		ShowWindow(hWnd, SW_MAXIMIZE);
+		break;
+	case GUI_WINDOW_STATE_DEFAULT:
+		if(first_window_has_been_created)
+		{
+			/* first window is created in the default state so this is not required */
+#if __I86__ || (__WINDOWS__ && !__NT__)
+			ShowWindow(hWnd, nCmdShow);
+#else
+			ShowWindow(hWnd, SW_SHOWDEFAULT);
+#endif
+		}
+		break;
+	case GUI_WINDOW_STATE_HIDDEN:
+		if(!first_window_has_been_created)
+		{
+			/* TODO: is this needed? apparently this is the expected first call for the window */
+			ShowWindow(hWnd, SW_NORMAL);
+		}
+		ShowWindow(hWnd, SW_HIDE);
+		break;
+	}
+
+	first_window_has_been_created = true;
+
 	UpdateWindow(hWnd);
 
 	return hWnd;
+}
+
+void gui_window_show(GuiWindow_t window, GuiWindowState_t state, GuiWindowStateAction_t action)
+{
+	switch(state)
+	{
+	case GUI_WINDOW_STATE_VISIBLE:
+		if(action == GUI_WINDOW_STATE_ACTIVATE)
+		{
+			ShowWindow(window, SW_SHOW);
+		}
+		else
+		{
+			/* if it is hidden, make it visible */
+			ShowWindow(window, SW_SHOWNA);
+		}
+		break;
+	case GUI_WINDOW_STATE_NORMAL:
+		if(action == GUI_WINDOW_STATE_ACTIVATE)
+		{
+			ShowWindow(window, SW_RESTORE);
+		}
+		else
+		{
+			/* if it is hidden, make it visible */
+			ShowWindow(window, SW_SHOWNOACTIVATE);
+		}
+		break;
+	case GUI_WINDOW_STATE_ICONIFIED:
+		switch(action)
+		{
+		case GUI_WINDOW_STATE_ACTIVATE:
+			ShowWindow(window, SW_SHOWMINIMIZED);
+			break;
+		case GUI_WINDOW_STATE_ACTIVATE_NEXT:
+			ShowWindow(window, SW_MINIMIZE);
+			break;
+		default:
+			ShowWindow(window, SW_SHOWMINNOACTIVE);
+			break;
+		}
+		break;
+	case GUI_WINDOW_STATE_MAXIMIZED:
+		ShowWindow(window, SW_MAXIMIZE);
+		break;
+	case GUI_WINDOW_STATE_DEFAULT:
+#if __I86__ || (__WINDOWS__ && !__NT__)
+		ShowWindow(window, nCmdShow);
+#else
+		ShowWindow(window, SW_SHOWDEFAULT);
+#endif
+		break;
+	case GUI_WINDOW_STATE_HIDDEN:
+		ShowWindow(window, SW_HIDE);
+		break;
+	}
 }
 
 int gui_main_loop(void)

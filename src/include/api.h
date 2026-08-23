@@ -25,7 +25,13 @@ int gui_message_box(const char * title, const char * message, GuiMessageBoxButto
 
 /* * * Window management * * */
 /** Creates and displays a window with the specified title, coordinates and dimensions **/
-GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h);
+GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h, GuiWindowState_t state);
+/** Show window, perform associated focus action (note, the system might not honor the action, for example a minimized window might not get activated) **/
+void gui_window_show(GuiWindow_t window, GuiWindowState_t state, GuiWindowStateAction_t action);
+/** Set focus onto window **/
+static inline void gui_window_activate(GuiWindow_t window) { gui_window_show(window, GUI_WINDOW_STATE_VISIBLE, GUI_WINDOW_STATE_ACTIVATE); }
+/** Hide window **/
+static inline void gui_window_hide(GuiWindow_t window) { gui_window_show(window, GUI_WINDOW_STATE_HIDDEN, GUI_WINDOW_STATE_NO_ACTION); }
 /** Tells the GUI that the window can be disposed of **/
 void gui_window_destroy(GuiWindow_t window);
 /** Retrieves the dimensions of the area of the window that belongs to the application **/

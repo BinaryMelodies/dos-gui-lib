@@ -139,6 +139,27 @@ enum
 	GUI_WINPOS_MAXIMUM = -2,
 };
 
+/* Constants for window state */
+typedef enum
+{
+	GUI_WINDOW_STATE_NORMAL    = 0,
+	GUI_WINDOW_STATE_ICONIFIED = 1,
+	GUI_WINDOW_STATE_MAXIMIZED = 2,
+
+	/* special values */
+	GUI_WINDOW_STATE_VISIBLE = -1,
+	GUI_WINDOW_STATE_DEFAULT = -2,
+	GUI_WINDOW_STATE_HIDDEN  = -3,
+} GuiWindowState_t;
+
+/* action to be taken when changing state */
+typedef enum
+{
+	GUI_WINDOW_STATE_NO_ACTION = 0,
+	GUI_WINDOW_STATE_ACTIVATE = 1,
+	GUI_WINDOW_STATE_ACTIVATE_NEXT = 2,
+} GuiWindowStateAction_t;
+
 /* Action types */
 enum
 {

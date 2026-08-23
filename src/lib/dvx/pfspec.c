@@ -293,7 +293,10 @@ static void _init_window(GuiWindow_t window, const char * window_title, int x, i
 
 	xcb_create_window(connection, XCB_COPY_FROM_PARENT, window, screen->root, x, y, w, h, 10, XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, mask, values);
 
-	xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8, strlen(window_title), window_title);
+	if(window_title != NULL)
+	{
+		xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8, strlen(window_title), window_title);
+	}
 
 	xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, WM_PROTOCOLS->atom, XCB_ATOM_ATOM, 32, 1, &WM_DELETE_WINDOW->atom);
 
@@ -648,7 +651,7 @@ int gui_message_box(const char * title, const char * message, GuiMessageBoxButto
 	return button_focus;
 }
 
-GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h)
+GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h, GuiWindowState_t state)
 {
 	xcb_window_t window;
 	uint32_t event_mask = 0;
@@ -692,10 +695,24 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 		h = 0; // TODO: set to screen height
 
 	_init_window(window, window_title, x, y, w, h, event_mask);
+	// TODO: state
 
 	gui_widget_set_register(window);
 
 	return window;
+}
+
+void gui_window_destroy(GuiWindow_t window)
+{
+	xcb_unmap_window(connection, window);
+	xcb_flush(connection);
+	xcb_destroy_window(connection, window);
+	gui_window_dispose_widget_set(gui_obtain_widgets(window));
+}
+
+void gui_window_show(GuiWindow_t window, GuiWindowState_t state, GuiWindowStateAction_t action)
+{
+	// TODO
 }
 
 static void _window_redraw(GuiWindow_t window)
@@ -971,14 +988,6 @@ int gui_main_loop(void)
 void gui_terminate_main_loop(void)
 {
 	gui_running = false;
-}
-
-void gui_window_destroy(GuiWindow_t window)
-{
-	xcb_unmap_window(connection, window);
-	xcb_flush(connection);
-	xcb_destroy_window(connection, window);
-	gui_window_dispose_widget_set(gui_obtain_widgets(window));
 }
 
 static const GuiKey_t keycodes[256] =

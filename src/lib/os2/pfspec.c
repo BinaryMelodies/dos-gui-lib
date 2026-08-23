@@ -287,7 +287,7 @@ int gui_message_box(const char * title, const char * message, GuiMessageBoxButto
 	return result;
 }
 
-GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h)
+GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, int h, GuiWindowState_t state)
 {
 	HWND hwndFrame;
 	HWND hwndClient;
@@ -295,6 +295,7 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 	ULONG flags = FCF_TITLEBAR | FCF_SYSMENU | FCF_SIZEBORDER | FCF_MINMAX | FCF_SHELLPOSITION | FCF_TASKLIST;
 	bool query_window_pos = false;
 
+	// window_title may be NULL
 	hwndFrame = WinCreateStdWindow(HWND_DESKTOP, WS_VISIBLE, &flags, WINDOW_CLASS_NAME, window_title, 0L, (HMODULE)0, 0, &hwndClient);
 	WinSendMsg(hwndFrame, WM_SETICON, (void *)WinQuerySysPointer(HWND_DESKTOP, SPTR_APPICON, FALSE), NULL);
 
@@ -371,7 +372,14 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 		WinSetWindowPos(hwndFrame, 0, x, y, w, h, flags);
 	}
 
+	// TODO: state
+
 	return hwndClient;
+}
+
+void gui_window_show(GuiWindow_t window, GuiWindowState_t state, GuiWindowStateAction_t action)
+{
+	// TODO
 }
 
 int gui_main_loop(void)

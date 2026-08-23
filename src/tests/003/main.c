@@ -203,7 +203,7 @@ int gui_main(GuiMainParameters_t parameters)
 	gui_register_callback_mouse_button_release(_callback_buttonrelease);
 	gui_register_callback_mouse_move(_callback_mousemove);
 
-	window = gui_window_create(WINDOW_TITLE, 10, 20, 300, 150);
+	window = gui_window_create(WINDOW_TITLE, 10, 20, 300, 150, GUI_WINDOW_STATE_DEFAULT);
 
 	result = gui_main_loop();
 
