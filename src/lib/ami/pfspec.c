@@ -83,7 +83,7 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 	if(h != GUI_WINPOS_DEFAULT) // TODO: max
 	{
 		tags[tag_index++] = WA_Height;
-		tags[tag_index++] = x;
+		tags[tag_index++] = h;
 	}
 
 	if(window_title != NULL)

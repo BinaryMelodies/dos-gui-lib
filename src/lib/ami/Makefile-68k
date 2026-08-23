@@ -4,7 +4,7 @@
 PLATFORM=ami
 LIBSUFFIX=68k
 GCC=m68k-amigaos-gcc
-CFLAGS=
+CFLAGS=-m68000
 PREFIX=m68k-amigaos-
 
 include ../Makefile.template

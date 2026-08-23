@@ -12,7 +12,7 @@ EXESFX=.prg
 LNKSFX=$(EXESFX)
 GCC=m68k-atari-mint-gcc
 LD=m68k-atari-mint-gcc
-CFLAGS=-I$(INCDIR) -I$(INCDIR)/$(USING)
+CFLAGS=-m68000 -I$(INCDIR) -I$(INCDIR)/$(USING)
 LDFLAGS=-L$(BINDIR)/lib/$(PLATFORM) -ldtk -lgem
 LIBS=$(BINDIR)/lib/$(PLATFORM)/libdtk.a
 

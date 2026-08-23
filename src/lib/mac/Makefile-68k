@@ -4,7 +4,7 @@
 PLATFORM=mac
 LIBSUFFIX=68k
 GCC=m68k-apple-macos-gcc
-CFLAGS=
+CFLAGS=-m68000
 PREFIX=m68k-apple-macos-
 
 include ../Makefile.template
