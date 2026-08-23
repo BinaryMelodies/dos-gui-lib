@@ -150,6 +150,7 @@ xcb_screen_t * screen;
 
 xcb_intern_atom_reply_t * WM_PROTOCOLS;
 xcb_intern_atom_reply_t * WM_DELETE_WINDOW;
+xcb_intern_atom_reply_t * WM_CHANGE_STATE;
 
 uint32_t lightgray_pixel;
 uint32_t darkgray_pixel;
@@ -238,7 +239,7 @@ static void gui_panel_draw(GuiWindow_t window, xcb_gcontext_t gc, gui_panel_t * 
 
 void gui_init(GuiMainParameters_t * parameters)
 {
-	xcb_intern_atom_cookie_t cookie_WM_PROTOCOLS, cookie_WM_DELETE_WINDOW;
+	xcb_intern_atom_cookie_t cookie_WM_PROTOCOLS, cookie_WM_DELETE_WINDOW, cookie_WM_CHANGE_STATE;
 
 	connection = xcb_connect(NULL, NULL);
 
@@ -247,6 +248,9 @@ void gui_init(GuiMainParameters_t * parameters)
 
 	cookie_WM_DELETE_WINDOW = xcb_intern_atom(connection, 0, sizeof "WM_DELETE_WINDOW" - 1, "WM_DELETE_WINDOW");
 	WM_DELETE_WINDOW = xcb_intern_atom_reply(connection, cookie_WM_DELETE_WINDOW, 0);
+
+	cookie_WM_CHANGE_STATE = xcb_intern_atom(connection, 0, sizeof "WM_CHANGE_STATE" - 1, "WM_CHANGE_STATE");
+	WM_CHANGE_STATE = xcb_intern_atom_reply(connection, cookie_WM_CHANGE_STATE, 0);
 
 	screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
 
@@ -710,9 +714,54 @@ void gui_window_destroy(GuiWindow_t window)
 	gui_window_dispose_widget_set(gui_obtain_widgets(window));
 }
 
+enum
+{
+	XCB_ICCCM_WM_STATE_WITHDRAWN = 0,
+	XCB_ICCCM_WM_STATE_NORMAL = 1,
+	XCB_ICCCM_WM_STATE_ICONIC = 3,
+};
+
+static inline void _window_change_state(GuiWindow_t window, uint32_t state)
+{
+	xcb_client_message_data_t data;
+	xcb_client_message_event_t event;
+
+	data.data32[0] = XCB_ICCCM_WM_STATE_ICONIC;
+
+	event.response_type = XCB_CLIENT_MESSAGE;
+	event.format = 32;
+	event.sequence = 0;
+	event.window = window;
+	event.type = WM_CHANGE_STATE->atom;
+	event.data.data32[0] = state;
+
+	xcb_send_event(connection, false, window, XCB_EVENT_MASK_STRUCTURE_NOTIFY, (char *)&event);
+	xcb_flush(connection);
+}
+
 void gui_window_show(GuiWindow_t window, GuiWindowState_t state, GuiWindowStateAction_t action)
 {
-	// TODO
+	switch(state)
+	{
+	case GUI_WINDOW_STATE_NORMAL:
+	case GUI_WINDOW_STATE_MAXIMIZED: // TODO
+	case GUI_WINDOW_STATE_VISIBLE:
+	case GUI_WINDOW_STATE_DEFAULT:
+		_window_change_state(window, XCB_ICCCM_WM_STATE_NORMAL);
+		break;
+	case GUI_WINDOW_STATE_ICONIFIED:
+		_window_change_state(window, XCB_ICCCM_WM_STATE_ICONIC);
+		return;
+	case GUI_WINDOW_STATE_HIDDEN:
+		_window_change_state(window, XCB_ICCCM_WM_STATE_WITHDRAWN);
+		return;
+	}
+
+	if(action == GUI_WINDOW_STATE_ACTIVATE)
+	{
+		const uint32_t values[] = { XCB_STACK_MODE_ABOVE };
+		xcb_configure_window(connection, window, XCB_CONFIG_WINDOW_STACK_MODE, values);
+	}
 }
 
 static void _window_redraw(GuiWindow_t window)
@@ -992,7 +1041,11 @@ void gui_terminate_main_loop(void)
 
 static const GuiKey_t keycodes[256] =
 {
+#if __unix__
+	[9] = KeyEscape,
+#else
 	[8] = KeyEscape,
+#endif
 	'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', KeyBackspace,
 	KeyTab, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', KeyEnter,
 	KeyControl, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',

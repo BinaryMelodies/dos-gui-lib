@@ -4,12 +4,14 @@ all:
 	make -C 002
 	make -C 003
 	make -C 004
+	make -C 005
 
 clean:
 	make -C 001 clean
 	make -C 002 clean
 	make -C 003 clean
 	make -C 004 clean
+	make -C 005 clean
 
 distclean: clean
 	rm -rf *~
@@ -17,6 +19,7 @@ distclean: clean
 	make -C 002 distclean
 	make -C 003 distclean
 	make -C 004 distclean
+	make -C 005 distclean
 
 .PHONY: all clean distclean
 

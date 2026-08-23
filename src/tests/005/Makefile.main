@@ -1,0 +1,11 @@
+
+all: $(BINDIR)/$(PLATFORM)/005$(VERSION)$(EXESFX)
+
+$(OBJDIR)/005/$(PLATFORM)/%$(VERSION)$(OBJSFX): %.c
+	mkdir -p `dirname $@`
+	$(CC) $(CFLAGS) $< -c $(CCOUT)$@ $(CCDEF)GUI_`echo $(PLATFORM) | tr [:lower:] [:upper:]`
+
+$(BINDIR)/$(PLATFORM)/005$(VERSION)$(LNKSFX): $(OBJDIR)/005/$(PLATFORM)/main$(VERSION)$(OBJSFX) $(LIBS)
+	mkdir -p `dirname $@`
+	$(LD) $< $(LDOUT) $@ $(LDFLAGS)
+

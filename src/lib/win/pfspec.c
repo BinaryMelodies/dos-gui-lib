@@ -478,7 +478,12 @@ void gui_window_show(GuiWindow_t window, GuiWindowState_t state, GuiWindowStateA
 		break;
 	case GUI_WINDOW_STATE_HIDDEN:
 		ShowWindow(window, SW_HIDE);
-		break;
+		return;
+	}
+
+	if(action == GUI_WINDOW_STATE_ACTIVATE)
+	{
+		SetActiveWindow(window);
 	}
 }
 

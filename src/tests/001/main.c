@@ -154,7 +154,11 @@ static bool far _callback_keypress(GuiWindow_t window, GuiKeyEvent_t key_event)
 		const char far * name = key_names[gui_get_keycode(key_event)];
 		if(name == NULL)
 			name = "invalid";
+#if !__GNUC__
 		_fsnprintf(message_buffer, sizeof message_buffer, "[%d] Key: %Ws", keypress_counter++, name);
+#else
+		snprintf(message_buffer, sizeof message_buffer, "[%d] Key: %s", keypress_counter++, name);
+#endif
 		gui_window_redraw(window);
 	}
 #if 0
