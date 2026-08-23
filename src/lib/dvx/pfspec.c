@@ -79,7 +79,13 @@ static gui_widget_set_t * gui_obtain_widgets(GuiWindow_t window)
 
 static void gui_window_dispose_widget_set(gui_widget_set_t * widgets)
 {
-	size_t index = widgets - gui_widget_set;
+	size_t index;
+	if(widgets == NULL)
+	{
+		return;
+	}
+
+	index = widgets - gui_widget_set;
 	if(index != gui_widget_set_count - 1)
 	{
 		memcpy(&gui_widget_set[index], &gui_widget_set[gui_widget_set_count - 1], sizeof(gui_widget_set_t));
@@ -907,16 +913,19 @@ int gui_main_loop(void)
 					int i;
 					xcb_button_press_event_t * button_event = (xcb_button_press_event_t *)event;
 					gui_widget_set_t * widget_set = gui_obtain_widgets(button_event->event);
-					for(i = 0; i < widget_set->tab_stop_count; i++)
+					if(widget_set != NULL)
 					{
-						size_t panel_index = widget_set->tab_stops[i].panel_index;
-						gui_panel_t * gui_panel = &widget_set->panels[panel_index];
-						if(button_event->event_x >= gui_panel->x && button_event->event_x < gui_panel->x + gui_panel->width
-						&& button_event->event_y >= gui_panel->y && button_event->event_y < gui_panel->y + gui_panel->height)
+						for(i = 0; i < widget_set->tab_stop_count; i++)
 						{
-							if(callback_action)
-								callback_action(button_event->event, panel_index, GUI_ACTION_CLICKED);
-							break;
+							size_t panel_index = widget_set->tab_stops[i].panel_index;
+							gui_panel_t * gui_panel = &widget_set->panels[panel_index];
+							if(button_event->event_x >= gui_panel->x && button_event->event_x < gui_panel->x + gui_panel->width
+							&& button_event->event_y >= gui_panel->y && button_event->event_y < gui_panel->y + gui_panel->height)
+							{
+								if(callback_action)
+									callback_action(button_event->event, panel_index, GUI_ACTION_CLICKED);
+								break;
+							}
 						}
 					}
 				}
@@ -966,6 +975,8 @@ void gui_terminate_main_loop(void)
 
 void gui_window_destroy(GuiWindow_t window)
 {
+	xcb_unmap_window(connection, window);
+	xcb_flush(connection);
 	xcb_destroy_window(connection, window);
 	gui_window_dispose_widget_set(gui_obtain_widgets(window));
 }

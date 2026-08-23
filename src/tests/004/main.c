@@ -13,6 +13,8 @@
 # define GUINAME "DESQview/X"
 #elif GUI_OS2
 # define GUINAME "OS/2"
+#elif GUI_LNX
+# define GUINAME "POSIX/X11"
 #endif
 
 static bool far _callback_show(GuiWindow_t window)

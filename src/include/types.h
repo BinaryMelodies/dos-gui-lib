@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#if __386__
+#if !__I86__
 # define far
 #endif
 

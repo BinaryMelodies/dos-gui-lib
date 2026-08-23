@@ -1,0 +1,11 @@
+
+# Makefile for Linux or native POSIX compliant system (32-bit)
+
+PLATFORM=lnx
+USING=dvx
+LIBSUFFIX=32
+GCC=gcc
+CFLAGS=-m32 -g
+
+include ../Makefile.template
+

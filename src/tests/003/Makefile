@@ -15,6 +15,8 @@ all:
 	make -f mfs/Makefile.os2v2
 	make -f mfs/Makefile.mgw32
 	make -f mfs/Makefile.mgw64
+	make -f mfs/Makefile.lnx32
+	make -f mfs/Makefile.lnx64
 
 clean:
 

@@ -1,0 +1,21 @@
+
+#### Makefile for Windows/MinGW (64-bit)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+VERSION=_64
+PLATFORM=lnx
+USING=dvx
+EXESFX=
+LNKSFX=$(EXESFX)
+GCC=gcc
+LD=gcc
+CFLAGS=-m64 -I$(INCDIR) -I$(INCDIR)/$(USING)
+LDFLAGS=-m64 -L$(BINDIR)/lib/$(PLATFORM) -ldtk64 -lxcb
+LIBS=$(BINDIR)/lib/$(PLATFORM)/libdtk64.a
+
+include mfs/Makefile.gnu
+include Makefile.main
+
