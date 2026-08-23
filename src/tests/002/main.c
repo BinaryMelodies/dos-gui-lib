@@ -153,10 +153,10 @@ static bool far _callback_keypress(GuiWindow_t window, GuiKeyEvent_t key_event)
 
 static bool far _callback_text(GuiWindow_t window, size_t count, char far * text)
 {
-#if __I86__
+#if !__GNUC__
 	_fsnprintf(message_buffer, sizeof message_buffer, "%.*Ws", (int)count, text);
-#elif __386__
-	_fsnprintf(message_buffer, sizeof message_buffer, "%.*s", (int)count, text);
+#else
+	snprintf(message_buffer, sizeof message_buffer, "%.*s", (int)count, text);
 #endif
 	gui_window_redraw(window);
 	return true;
