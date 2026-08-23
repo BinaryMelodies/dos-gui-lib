@@ -10,10 +10,35 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
-#include <dos.h>
+#if !__m68k__
+# include <dos.h>
+#endif
 
 #undef YES
 #undef NO
+
+#if __m68k__
+/* the PC and Atari versions have slightly different conversions, these definitions should smooth over the differences */
+# define FP_OFF(__p) ((short)((long)(__p) >> 16))
+# define FP_SEG(__p) ((short)(long)(__p))
+
+# define _frealloc realloc
+# define _fmalloc malloc
+# define _fstrlen strlen
+
+# define WF_CXYWH WF_CURRXYWH
+# define WF_WXYWH WF_WORKXYWH
+
+# define ESCCANCEL 0 /* TODO */
+# define SCROLLER 0 /* TODO */
+# define FALSE 0
+# define TRUE 1
+
+# define FMD_FORWARD 0
+# define FMD_BACKWARD 1
+#else
+typedef LPVOID OBSPEC;
+#endif
 
 /* widget handling */
 
@@ -97,7 +122,7 @@ static WORD gui_append_object(struct gui_widgets * widgets, UWORD ob_type, UWORD
 	widgets->objects[index].ob_type = ob_type;
 	widgets->objects[index].ob_flags = ob_flags | LASTOB;
 	widgets->objects[index].ob_state = ob_state;
-	widgets->objects[index].ob_spec = ob_spec;
+	widgets->objects[index].ob_spec = (OBSPEC)(long) ob_spec;
 	widgets->objects[index].ob_x = ob_x;
 	widgets->objects[index].ob_y = ob_y;
 	widgets->objects[index].ob_width = ob_width;
@@ -180,7 +205,11 @@ static WORD objc_find_next(OBJECT far * tree, WORD start_obj, WORD direction, WO
 {
 	WORD obj;
 
-	if(direction == FMD_BACKWARD)
+	if(tree == NULL)
+	{
+		return 0;
+	}
+	else if(direction == FMD_BACKWARD)
 	{
 		obj = objc_find_following(tree, start_obj, NIL, FMD_BACKWARD, check_flag);
 		if(obj != NIL)
@@ -210,6 +239,7 @@ static WORD objc_find_next(OBJECT far * tree, WORD start_obj, WORD direction, WO
 
 static void objc_set_highlighted(WORD window, OBJECT far * tree, WORD object, bool highlight)
 {
+#if !__m68k__
 	WORD x, y;
 
 	if(object == 0 || !(tree[object].ob_flags & (SELECTABLE | EDITABLE)))
@@ -244,6 +274,7 @@ static void objc_set_highlighted(WORD window, OBJECT far * tree, WORD object, bo
 #endif
 		}
 	}
+#endif
 }
 
 /* actual program data */
@@ -263,7 +294,11 @@ void gui_init(GuiMainParameters_t * parameters)
 {
 	int i;
 
+#if !__m68k__
 	appl = appl_init(NULL);
+#else
+	appl = appl_init();
+#endif
 	vdi_handle = graf_handle(&char_width, &char_height, &box_width, &box_height);
 	for(i = 0; i < 10; i++)
 		workstation_input[i] = 1;
@@ -295,6 +330,7 @@ int gui_main_loop(void)
 {
 	WORD msg[8];
 	struct gui_widgets * widgets = NULL;
+
 
 	/* set initial widgets */
 	{
@@ -362,7 +398,6 @@ int gui_main_loop(void)
 				events |= MU_M1;
 			if(widgets->objects_count > 0)
 				events |= MU_KEYBD | MU_BUTTON;
-
 			if(callback_click_count_mask & GUI_MOUSE_CLICK_DOUBLE)
 				check_click_count = 2;
 			else
@@ -383,7 +418,11 @@ int gui_main_loop(void)
 			else
 				check_button_state = check_button_mask;
 
+#if !__m68k__
 			which = evnt_multi(events,
+#else
+			which = mt_evnt_multi(events,
+#endif
 				// button
 				check_click_count, check_button_mask, check_button_state,
 				// mouse
@@ -392,11 +431,19 @@ int gui_main_loop(void)
 				// mesag
 				msg,
 				// timer
+#if !__m68k__
 				0, 0,
+#else
+				0L,
+#endif
 				// mouse
 				&mouse_x, &mouse_y, &mouse_buttons,
 				// keybd
-				&keystate, &keycode, &click_count);
+				&keystate, &keycode, &click_count
+#if __m68k__
+				, aes_global
+#endif
+				);
 		}
 
 		if(which & MU_MESAG)
@@ -456,129 +503,138 @@ int gui_main_loop(void)
 			}
 
 			/* widget handling */
-			switch(keycode)
+			if(widgets->objects != NULL)
 			{
-			case 0x1C0D: // RETURN
-				if(widgets->objects[widgets->edit_obj].ob_flags & EXIT)
+				switch(keycode)
 				{
-					widgets->next_obj = widgets->edit_obj;
-				}
-				else
-				{
-					widgets->next_obj = objc_find_following(widgets->objects, widgets->edit_obj - 1, NIL, FMD_FORWARD, DEFAULT);
-					if(widgets->next_obj == NIL)
-						widgets->next_obj = widgets->edit_obj;
-				}
-
-				if(widgets->objects[widgets->next_obj].ob_flags & EXIT)
-				{
-					WORD discard;
-					if(widgets->next_obj != widgets->edit_obj)
-						gui_running &= gui_click_action(widgets, widgets->edit_obj, 1, &discard);
-					widgets->edit_obj = widgets->next_obj;
-					gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
-				}
-				break;
-			case 0x3920: // SPACE
-				widgets->next_obj = widgets->edit_obj;
-				objc_set_highlighted(widgets->window, widgets->objects, widgets->edit_obj, false);
-				gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
-				objc_set_highlighted(widgets->window, widgets->objects, widgets->edit_obj, true);
-				break;
-			case 0x4B00: // LEFT
-				if(widgets->objects[widgets->edit_obj].ob_flags & EDITABLE && widgets->index != 0)
-				{
-					gui_running &= form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
-					break;
-				}
-				// fallthru
-			case 0x0F00: // BACK TAB
-				widgets->next_obj = objc_find_next(widgets->objects, widgets->edit_obj, FMD_BACKWARD, EDITABLE | SELECTABLE);
-				break;
-			case 0x4800: // UP
-				if(widgets->objects[widgets->edit_obj].ob_flags & RBUTTON)
-				{
-					WORD parent_obj;
-					parent_obj = objc_get_parent(widgets->objects, widgets->edit_obj);
-					widgets->next_obj = objc_find_following(widgets->objects, widgets->objects[parent_obj].ob_head, NIL, FMD_BACKWARD, EDITABLE | SELECTABLE);
-					if(widgets->next_obj == NIL)
-						widgets->next_obj = widgets->objects[parent_obj].ob_head;
-					parent_obj = objc_get_parent(widgets->objects, widgets->next_obj);
-					widgets->next_obj = objc_find_following(widgets->objects, widgets->objects[parent_obj].ob_head, NIL, FMD_FORWARD, EDITABLE | SELECTABLE);
-					if(widgets->next_obj == NIL)
-						widgets->next_obj = widgets->objects[parent_obj].ob_head;
-				}
-				else
-				{
-					widgets->next_obj = widgets->edit_obj;
-				}
-				widgets->next_obj = objc_find_next(widgets->objects, widgets->next_obj, FMD_BACKWARD, EDITABLE | SELECTABLE);
-				break;
-			case 0x4D00: // RIGHT
-				if((widgets->objects[widgets->edit_obj].ob_flags & EDITABLE) && widgets->index < _fstrlen(((TEDINFO far *)widgets->objects[widgets->edit_obj].ob_spec)->te_ptext))
-				{
-					gui_running &= form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
-					break;
-				}
-				// fallthru
-			case 0x0F09: // TAB
-				widgets->next_obj = objc_find_next(widgets->objects, widgets->edit_obj, FMD_FORWARD, EDITABLE | SELECTABLE);
-				break;
-			case 0x5000: // DOWN
-				if(widgets->objects[widgets->edit_obj].ob_flags & RBUTTON)
-				{
-					WORD parent_obj = objc_get_parent(widgets->objects, widgets->edit_obj);
-					widgets->next_obj = objc_find_following(widgets->objects, widgets->objects[parent_obj].ob_tail, NIL, FMD_FORWARD, EDITABLE | SELECTABLE);
-					if(widgets->next_obj == NIL)
-						widgets->next_obj = widgets->objects[parent_obj].ob_tail;
-				}
-				else
-				{
-					widgets->next_obj = objc_find_next(widgets->objects, widgets->edit_obj, FMD_FORWARD, EDITABLE | SELECTABLE);
-				}
-				break;
-			case 0x011B: // ESC
-				{
-					WORD esc_obj = objc_find_following(widgets->objects, widgets->edit_obj, NIL, FMD_FORWARD, ESCCANCEL);
-					if(esc_obj == NIL)
-						widgets->next_obj = widgets->edit_obj;
-					if(widgets->objects[esc_obj].ob_flags & ESCCANCEL)
+				case 0x1C0D: // RETURN
+					if(widgets->objects[widgets->edit_obj].ob_flags & EXIT)
 					{
-						objc_set_highlighted(widgets->window, widgets->objects, widgets->edit_obj, false);
-						widgets->next_obj = widgets->edit_obj = esc_obj;
+						widgets->next_obj = widgets->edit_obj;
+					}
+					else
+					{
+						widgets->next_obj = objc_find_following(widgets->objects, widgets->edit_obj - 1, NIL, FMD_FORWARD, DEFAULT);
+						if(widgets->next_obj == NIL)
+							widgets->next_obj = widgets->edit_obj;
+					}
+
+					if(widgets->objects[widgets->next_obj].ob_flags & EXIT)
+					{
+						WORD discard;
+						if(widgets->next_obj != widgets->edit_obj)
+							gui_running &= gui_click_action(widgets, widgets->edit_obj, 1, &discard);
+						widgets->edit_obj = widgets->next_obj;
 						gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
 					}
-				}
-				break;
-			/* TODO: does not seem to work */
-			case 0x4900: // P_UP (page up)
-				widgets->next_obj = objc_find_following(widgets->objects, ROOT, NIL, FMD_FORWARD, SCROLLER);
-				if(widgets->next_obj == NIL)
-					widgets->next_obj = ROOT;
-				gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
-				break;
-			/* TODO: does not seem to work */
-			case 0x5100: // P_DOWN (page down)
-				widgets->next_obj = objc_find_following(widgets->objects, widgets->next_obj, NIL, FMD_FORWARD, LASTOB);
-				{
-					WORD last_obj = widgets->next_obj;
-					widgets->next_obj = objc_find_following(widgets->objects, widgets->next_obj, NIL, FMD_BACKWARD, SCROLLER);
+					break;
+				case 0x3920: // SPACE
+					widgets->next_obj = widgets->edit_obj;
+					objc_set_highlighted(widgets->window, widgets->objects, widgets->edit_obj, false);
+					gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
+					objc_set_highlighted(widgets->window, widgets->objects, widgets->edit_obj, true);
+					break;
+				case 0x4B00: // LEFT
+					if(widgets->objects[widgets->edit_obj].ob_flags & EDITABLE && widgets->index != 0)
+					{
+						gui_running &= form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
+						break;
+					}
+					// fallthru
+				case 0x0F00: // BACK TAB
+					widgets->next_obj = objc_find_next(widgets->objects, widgets->edit_obj, FMD_BACKWARD, EDITABLE | SELECTABLE);
+					break;
+				case 0x4800: // UP
+					if(widgets->objects[widgets->edit_obj].ob_flags & RBUTTON)
+					{
+						WORD parent_obj;
+						parent_obj = objc_get_parent(widgets->objects, widgets->edit_obj);
+						widgets->next_obj = objc_find_following(widgets->objects, widgets->objects[parent_obj].ob_head, NIL, FMD_BACKWARD, EDITABLE | SELECTABLE);
+						if(widgets->next_obj == NIL)
+							widgets->next_obj = widgets->objects[parent_obj].ob_head;
+						parent_obj = objc_get_parent(widgets->objects, widgets->next_obj);
+						widgets->next_obj = objc_find_following(widgets->objects, widgets->objects[parent_obj].ob_head, NIL, FMD_FORWARD, EDITABLE | SELECTABLE);
+						if(widgets->next_obj == NIL)
+							widgets->next_obj = widgets->objects[parent_obj].ob_head;
+					}
+					else
+					{
+						widgets->next_obj = widgets->edit_obj;
+					}
+					widgets->next_obj = objc_find_next(widgets->objects, widgets->next_obj, FMD_BACKWARD, EDITABLE | SELECTABLE);
+					break;
+				case 0x4D00: // RIGHT
+					if((widgets->objects[widgets->edit_obj].ob_flags & EDITABLE) && widgets->index < _fstrlen(
+	#if !__m68k__
+						((TEDINFO far *)widgets->objects[widgets->edit_obj].ob_spec)->te_ptext
+	#else
+						widgets->objects[widgets->edit_obj].ob_spec.tedinfo->te_ptext
+	#endif
+					))
+					{
+						gui_running &= form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
+						break;
+					}
+					// fallthru
+				case 0x0F09: // TAB
+					widgets->next_obj = objc_find_next(widgets->objects, widgets->edit_obj, FMD_FORWARD, EDITABLE | SELECTABLE);
+					break;
+				case 0x5000: // DOWN
+					if(widgets->objects[widgets->edit_obj].ob_flags & RBUTTON)
+					{
+						WORD parent_obj = objc_get_parent(widgets->objects, widgets->edit_obj);
+						widgets->next_obj = objc_find_following(widgets->objects, widgets->objects[parent_obj].ob_tail, NIL, FMD_FORWARD, EDITABLE | SELECTABLE);
+						if(widgets->next_obj == NIL)
+							widgets->next_obj = widgets->objects[parent_obj].ob_tail;
+					}
+					else
+					{
+						widgets->next_obj = objc_find_next(widgets->objects, widgets->edit_obj, FMD_FORWARD, EDITABLE | SELECTABLE);
+					}
+					break;
+				case 0x011B: // ESC
+					{
+						WORD esc_obj = objc_find_following(widgets->objects, widgets->edit_obj, NIL, FMD_FORWARD, ESCCANCEL);
+						if(esc_obj == NIL)
+							widgets->next_obj = widgets->edit_obj;
+						if(widgets->objects[esc_obj].ob_flags & ESCCANCEL)
+						{
+							objc_set_highlighted(widgets->window, widgets->objects, widgets->edit_obj, false);
+							widgets->next_obj = widgets->edit_obj = esc_obj;
+							gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
+						}
+					}
+					break;
+				/* TODO: does not seem to work */
+				case 0x4900: // P_UP (page up)
+					widgets->next_obj = objc_find_following(widgets->objects, ROOT, NIL, FMD_FORWARD, SCROLLER);
 					if(widgets->next_obj == NIL)
-						widgets->next_obj = last_obj;
+						widgets->next_obj = ROOT;
+					gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
+					break;
+				/* TODO: does not seem to work */
+				case 0x5100: // P_DOWN (page down)
+					widgets->next_obj = objc_find_following(widgets->objects, widgets->next_obj, NIL, FMD_FORWARD, LASTOB);
+					{
+						WORD last_obj = widgets->next_obj;
+						widgets->next_obj = objc_find_following(widgets->objects, widgets->next_obj, NIL, FMD_BACKWARD, SCROLLER);
+						if(widgets->next_obj == NIL)
+							widgets->next_obj = last_obj;
+					}
+					gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
+					break;
+				default:
+					// TODO: handle shortcuts
+					gui_running &= form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
+					break;
 				}
-				gui_running &= gui_click_action(widgets, widgets->next_obj, 1, &widgets->next_obj);
-				break;
-			default:
-				// TODO: handle shortcuts
-				gui_running &= form_keybd(widgets->objects, widgets->edit_obj, widgets->next_obj, keycode, &widgets->next_obj, (WORD *)&keycode);
-				break;
-			}
 
-			if(keycode)
-			{
-				if(widgets->objects[widgets->edit_obj].ob_flags & EDITABLE)
+				if(keycode)
 				{
-					objc_edit(widgets->objects, widgets->edit_obj, keycode, &widgets->index, EDCHAR);
+					if(widgets->objects[widgets->edit_obj].ob_flags & EDITABLE)
+					{
+						objc_edit(widgets->objects, widgets->edit_obj, keycode, &widgets->index, EDCHAR);
+					}
 				}
 			}
 		}
@@ -619,14 +675,17 @@ int gui_main_loop(void)
 			}
 
 			/* widget handling */
-			widgets->next_obj = objc_find(widgets->objects, ROOT, MAX_DEPTH, mouse_x, mouse_y);
-			if(widgets->next_obj == NIL)
+			if(widgets->objects != NULL)
 			{
-				widgets->next_obj = 0;
-			}
-			else
-			{
-				gui_running &= gui_click_action(widgets, widgets->next_obj, click_count, &widgets->next_obj);
+				widgets->next_obj = objc_find(widgets->objects, ROOT, MAX_DEPTH, mouse_x, mouse_y);
+				if(widgets->next_obj == NIL)
+				{
+					widgets->next_obj = 0;
+				}
+				else
+				{
+					gui_running &= gui_click_action(widgets, widgets->next_obj, click_count, &widgets->next_obj);
+				}
 			}
 
 			gui_last_button_state ^= true;
@@ -933,6 +992,11 @@ static void gui_widgets_redraw_part(WORD window, OBJECT far * tree, WORD cl_x, W
 static void gui_widgets_redraw(WORD window, OBJECT far * tree)
 {
 	WORD x, y, w, h;
+	if(tree == NULL)
+	{
+		return;
+	}
+
 	wind_get(window, WF_WXYWH, &x, &y, &w, &h);
 	tree[ROOT].ob_x = x;
 	tree[ROOT].ob_y = y;

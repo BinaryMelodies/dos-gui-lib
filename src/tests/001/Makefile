@@ -13,6 +13,7 @@ all:
 	make -f mfs/Makefile.os2-s
 	make -f mfs/Makefile.os2-l
 	make -f mfs/Makefile.os2v2
+	make -f mfs/Makefile.tos
 	make -f mfs/Makefile.mgw32
 	make -f mfs/Makefile.mgw64
 	make -f mfs/Makefile.lnx32

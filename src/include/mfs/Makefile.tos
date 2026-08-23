@@ -1,0 +1,21 @@
+
+#### Makefile for Windows/MinGW (32-bit)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+VERSION=
+PLATFORM=tos
+USING=gem
+EXESFX=.prg
+LNKSFX=$(EXESFX)
+GCC=m68k-atari-mint-gcc
+LD=m68k-atari-mint-gcc
+CFLAGS=-I$(INCDIR) -I$(INCDIR)/$(USING)
+LDFLAGS=-L$(BINDIR)/lib/$(PLATFORM) -ldtk -lgem
+LIBS=$(BINDIR)/lib/$(PLATFORM)/libdtk.a
+
+include mfs/Makefile.gnu
+include Makefile.main
+

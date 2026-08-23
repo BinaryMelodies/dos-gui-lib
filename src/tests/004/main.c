@@ -9,6 +9,8 @@
 # define GUINAME "Windows"
 #elif GUI_GEM
 # define GUINAME "GEM"
+#elif GUI_TOS
+# define GUINAME "Atari TOS"
 #elif GUI_DVX
 # define GUINAME "DESQview/X"
 #elif GUI_OS2
@@ -71,6 +73,8 @@ int gui_main(GuiMainParameters_t parameters)
 # endif
 #elif __amd64__
 	" (64-bit)",
+#elif __m68k__
+	" (68K)",
 #endif
 		10, 20, 400, 300, GUI_WINDOW_STATE_DEFAULT);
 

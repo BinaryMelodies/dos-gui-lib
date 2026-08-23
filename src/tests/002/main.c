@@ -9,6 +9,8 @@
 # define GUINAME "Windows"
 #elif GUI_GEM
 # define GUINAME "GEM"
+#elif GUI_TOS
+# define GUINAME "Atari TOS"
 #elif GUI_DVX
 # define GUINAME "DESQview/X"
 #elif GUI_OS2

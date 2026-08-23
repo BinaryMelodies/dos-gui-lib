@@ -12,8 +12,8 @@ EXESFX=
 LNKSFX=$(EXESFX)
 GCC=gcc
 LD=gcc
-CFLAGS=-m32 -I$(INCDIR) -I$(INCDIR)/$(USING) -g
-LDFLAGS=-m32 -L$(BINDIR)/lib/$(PLATFORM) -ldtk32 -lxcb -g
+CFLAGS=-m32 -I$(INCDIR) -I$(INCDIR)/$(USING)
+LDFLAGS=-m32 -L$(BINDIR)/lib/$(PLATFORM) -ldtk32 -lxcb
 LIBS=$(BINDIR)/lib/$(PLATFORM)/libdtk32.a
 
 include mfs/Makefile.gnu

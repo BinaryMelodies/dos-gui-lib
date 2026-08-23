@@ -3,7 +3,16 @@
 
 /* Platform specific definitions for Digital Research GEM */
 
-#include <gembind.h>
+#if !__m68k__
+# include <gembind.h>
+#else
+# define __GEMLIB_OLDNAMES
+# include <gem.h>
+typedef short WORD;
+typedef unsigned short UWORD;
+typedef long LONG;
+typedef unsigned long ULONG;
+#endif
 
 typedef WORD GuiWindow_t;
 

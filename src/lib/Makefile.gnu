@@ -6,7 +6,7 @@ OBJFILES=$(patsubst %.c,$(OBJDIR)/$(PLATFORM)/%$(LIBSUFFIX).o,$(notdir $(SRCFILE
 $(BINDIR)/lib/$(PLATFORM)/libdtk$(LIBSUFFIX).a: $(OBJFILES) $(HDRFILES)
 	mkdir -p `dirname $@`
 	rm -f $@
-	ar rcs $@ $(OBJFILES)
+	$(PREFIX)ar rcs $@ $(OBJFILES)
 
 $(OBJDIR)/$(PLATFORM)/%$(LIBSUFFIX).o: $(SRCDIR)/%.c $(HDRFILES)
 	mkdir -p `dirname $@`
