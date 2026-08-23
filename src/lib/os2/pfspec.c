@@ -126,12 +126,12 @@ MRESULT EXPENTRY ClientWindowProcedure(
 		if(callback_action)
 			callback_action(hwnd, COMMANDMSG(&msg)->cmd, GUI_ACTION_CLICKED);
 		return 0;
-	//case WM_CLOSE: // TODO: should precede WM_DESTROY?
-	case WM_DESTROY:
-		if(callback_quit && callback_quit(hwnd))
+	case WM_CLOSE:
+		if(callback_close && callback_close(hwnd))
 			return 0;
-		gui_terminate_main_loop();
-		return 0;
+	//case WM_DESTROY:
+	//	gui_terminate_main_loop();
+	//	return 0;
 	}
 
 	return WinDefWindowProc(hwnd, msg, mparam1, mparam2);

@@ -21,6 +21,20 @@
 
 char message_buffer[256] = "Brave new world!";
 
+static size_t window_count = 2;
+static GuiWindow_t window1;
+static GuiWindow_t window2;
+
+static bool far _callback_close(GuiWindow_t window)
+{
+	gui_window_destroy(window);
+	if(--window_count == 0)
+	{
+		gui_terminate_main_loop();
+	}
+	return true;
+}
+
 static bool far _callback_show(GuiWindow_t window)
 {
 	GuiDrawContext_t draw_context = gui_window_begin_draw(window);
@@ -36,15 +50,11 @@ static bool far _callback_show(GuiWindow_t window)
 	return true;
 }
 
-static GuiWindow_t window1;
-static GuiWindow_t window2;
-
 static bool far _callback_keypress(GuiWindow_t window, GuiKeyEvent_t key_event)
 {
 	if(gui_get_keycode(key_event) == KeyEscape)
-		exit(1);
-
-	if(gui_get_keycode(key_event) == '1')
+		_callback_close(window);
+	else if(gui_get_keycode(key_event) == '1')
 		gui_window_activate(window1);
 	else if(gui_get_keycode(key_event) == '2')
 		gui_window_activate(window2);
@@ -58,6 +68,7 @@ int gui_main(GuiMainParameters_t parameters)
 
 	gui_init(&parameters);
 
+	gui_register_callback_close(_callback_close);
 	gui_register_callback_show(_callback_show);
 	gui_register_callback_key_press(_callback_keypress);
 

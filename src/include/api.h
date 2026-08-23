@@ -98,9 +98,9 @@ typedef bool gui_callback_mouse_move_t(GuiWindow_t window, GuiMouseMoveEvent_t m
 /** Callback when the mouse cursor is moved, must be registered before creating any windows **/
 void gui_register_callback_mouse_move(gui_callback_mouse_move_t far * mouse_move);
 
-typedef bool gui_callback_quit_t(GuiWindow_t window);
+typedef bool gui_callback_close_t(GuiWindow_t window);
 /** Callback when the window is closed by the user, must be registered before creating any windows **/
-void gui_register_callback_quit(gui_callback_quit_t far * quit);
+void gui_register_callback_close(gui_callback_close_t far * quit);
 
 /* * * Graphical widgets * * */
 /* Creates a push button */

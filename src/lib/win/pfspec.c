@@ -116,12 +116,12 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			callback_action(hWnd, LOWORD(wParam), GUI_ACTION_CLICKED);
 		return 0;
 
-	//case WM_CLOSE: // TODO: should precede WM_DESTROY?
-	case WM_DESTROY:
-		if(callback_quit && callback_quit(hWnd))
+	case WM_CLOSE:
+		if(callback_close && callback_close(hWnd))
 			return 0;
-		gui_terminate_main_loop();
-		return 0;
+	//case WM_DESTROY:
+	//	gui_terminate_main_loop();
+	//	return 0;
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }

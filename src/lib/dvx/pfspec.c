@@ -1017,14 +1017,13 @@ int gui_main_loop(void)
 			case XCB_CLIENT_MESSAGE:
 				if(((xcb_client_message_event_t *)event)->data.data32[0] == WM_DELETE_WINDOW->atom)
 				{
-					if(callback_quit)
+					if(callback_close)
 					{
-						bool override = callback_quit(((xcb_client_message_event_t *)event)->window);
+						bool override = callback_close(((xcb_client_message_event_t *)event)->window);
 						xcb_flush(connection);
 						if(override)
 							break;
 					}
-					gui_terminate_main_loop();
 				}
 				break;
 			}

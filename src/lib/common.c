@@ -3,6 +3,12 @@
 
 #include "api.h"
 
+static bool default_callback_close(GuiWindow_t window)
+{
+	gui_window_destroy(window);
+	gui_terminate_main_loop();
+}
+
 gui_callback_show_t far * callback_show = NULL;
 gui_callback_key_t far * callback_key_press = NULL;
 gui_callback_key_t far * callback_key_release = NULL;
@@ -10,7 +16,7 @@ gui_callback_text_t far * callback_text = NULL;
 gui_callback_mouse_button_t far * callback_mouse_button_press = NULL;
 gui_callback_mouse_button_t far * callback_mouse_button_release = NULL;
 gui_callback_mouse_move_t far * callback_mouse_move = NULL;
-gui_callback_quit_t far * callback_quit = NULL;
+gui_callback_close_t far * callback_close = default_callback_close;
 gui_callback_action_t far * callback_action = NULL;
 
 GuiMouseButton_t callback_mouse_buttons_mask = 0;
@@ -57,9 +63,9 @@ void gui_register_callback_mouse_move(gui_callback_mouse_move_t far * mouse_move
 	callback_mouse_move = mouse_move;
 }
 
-void gui_register_callback_quit(gui_callback_quit_t far * quit)
+void gui_register_callback_close(gui_callback_close_t far * quit)
 {
-	callback_quit = quit;
+	callback_close = quit;
 }
 
 void gui_register_callback_action(gui_callback_action_t far * action)

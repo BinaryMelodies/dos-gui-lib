@@ -424,11 +424,8 @@ int gui_main_loop(void)
 				}
 				break;
 			case WM_CLOSED:
-				if(callback_quit && callback_quit(msg[3]))
+				if(callback_close && callback_close(msg[3]))
 					break;
-
-				gui_window_destroy(msg[3]);
-				gui_terminate_main_loop();
 				break;
 			case WM_MOVED:
 			case WM_SIZED:
