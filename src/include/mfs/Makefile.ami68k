@@ -1,0 +1,20 @@
+
+#### Makefile for Commodore Amiga (68k)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+VERSION=-68k
+PLATFORM=ami
+EXESFX=
+LNKSFX=$(EXESFX)
+GCC=m68k-amigaos-gcc
+LD=m68k-amigaos-gcc
+CFLAGS=-I$(INCDIR) -I$(INCDIR)/$(PLATFORM)
+LDFLAGS=-L$(BINDIR)/lib/$(PLATFORM) -ldtk68k
+LIBS=$(BINDIR)/lib/$(PLATFORM)/libdtk68k.a
+
+include mfs/Makefile.gnu
+include Makefile.main
+

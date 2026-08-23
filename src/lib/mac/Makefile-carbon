@@ -1,0 +1,11 @@
+
+# Makefile for Apple Macintosh (Carbon API, PowerPC)
+
+PLATFORM=mac
+LIBSUFFIX=carbon
+GCC=powerpc-apple-macos-gcc
+CFLAGS=-carbon -DTARGET_API_MAC_CARBON=1
+PREFIX=powerpc-apple-macos-
+
+include ../Makefile.template
+

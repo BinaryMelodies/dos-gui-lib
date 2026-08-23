@@ -1,0 +1,11 @@
+
+# Makefile for Apple Macintosh (68K)
+
+PLATFORM=mac
+LIBSUFFIX=68k
+GCC=m68k-apple-macos-gcc
+CFLAGS=
+PREFIX=m68k-apple-macos-
+
+include ../Makefile.template
+

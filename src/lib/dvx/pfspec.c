@@ -1,5 +1,5 @@
 
-/* Implementation for for DESQview/X, specifically the XCB library */
+/* Implementation for DESQview/X, specifically the XCB library */
 
 #include "api.h"
 #define _COMPILE_LIBRARY

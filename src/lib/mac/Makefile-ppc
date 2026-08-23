@@ -1,0 +1,11 @@
+
+# Makefile for Apple Macintosh (PowerPC)
+
+PLATFORM=mac
+LIBSUFFIX=ppc
+GCC=powerpc-apple-macos-gcc
+CFLAGS=
+PREFIX=powerpc-apple-macos-
+
+include ../Makefile.template
+

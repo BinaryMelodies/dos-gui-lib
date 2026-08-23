@@ -1,0 +1,24 @@
+
+#### Makefile for Apple Macintosh (68k)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+VERSION=-68k
+PLATFORM=mac
+EXESFX=
+LNKSFX=$(EXESFX)
+GCC=m68k-apple-macos-gcc
+LD=m68k-apple-macos-gcc
+CFLAGS=-I$(INCDIR) -I$(INCDIR)/$(PLATFORM)
+LDFLAGS=-L$(BINDIR)/lib/$(PLATFORM) -ldtk68k
+LIBS=$(BINDIR)/lib/$(PLATFORM)/libdtk68k.a
+define postprocess
+Rez /Retro68-build/toolchain/RIncludes/Retro68APPL.r -t "APPL" -c "????" --copy $@ -o $@
+Rez -t "APPL" -c "????" --copy $@ -o $(dir $@)/%$(notdir $@)
+endef
+
+include mfs/Makefile.gnu
+include Makefile.main
+

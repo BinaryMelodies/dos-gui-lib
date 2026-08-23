@@ -1,0 +1,11 @@
+
+# Makefile for Commodore Amiga (PowerPC)
+
+PLATFORM=ami
+LIBSUFFIX=ppc
+GCC=ppc-amigaos-gcc
+CFLAGS=
+PREFIX=ppc-amigaos-
+
+include ../Makefile.template
+

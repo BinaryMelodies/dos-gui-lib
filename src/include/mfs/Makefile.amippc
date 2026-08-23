@@ -1,0 +1,20 @@
+
+#### Makefile for Commodore Amiga 4.0 (PowerPC)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+VERSION=-ppc
+PLATFORM=ami
+EXESFX=
+LNKSFX=$(EXESFX)
+GCC=ppc-amigaos-gcc
+LD=ppc-amigaos-gcc
+CFLAGS=-I$(INCDIR) -I$(INCDIR)/$(PLATFORM)
+LDFLAGS=-L$(BINDIR)/lib/$(PLATFORM) -ldtkppc -lauto
+LIBS=$(BINDIR)/lib/$(PLATFORM)/libdtkppc.a
+
+include mfs/Makefile.gnu
+include Makefile.main
+

@@ -14,6 +14,11 @@ all:
 	make -f mfs/Makefile.os2-l
 	make -f mfs/Makefile.os2v2
 	make -f mfs/Makefile.tos
+	make -f mfs/Makefile.ami68k
+	make -f mfs/Makefile.amippc
+	make -f mfs/Makefile.mac68k
+	make -f mfs/Makefile.macppc
+	make -f mfs/Makefile.maccarbon
 	make -f mfs/Makefile.mgw32
 	make -f mfs/Makefile.mgw64
 	make -f mfs/Makefile.lnx32

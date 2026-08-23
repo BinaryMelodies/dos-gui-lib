@@ -15,6 +15,10 @@
 # define GUINAME "DESQview/X"
 #elif GUI_OS2
 # define GUINAME "OS/2"
+#elif GUI_AMI
+# define GUINAME "Commodore Amiga"
+#elif GUI_MAC
+# define GUINAME "Apple Macintosh"
 #elif GUI_LNX
 # define GUINAME "POSIX/X11"
 #endif

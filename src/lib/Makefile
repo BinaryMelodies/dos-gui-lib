@@ -5,6 +5,8 @@ all:
 	make -C win
 	make -C os2
 	make -C tos
+	make -C ami
+	make -C mac
 	make -C mgw
 	make -C lnx
 
@@ -17,6 +19,8 @@ distclean:
 	rm -f win/*~
 	rm -f os2/*~
 	rm -f tos/*~
+	rm -f ami/*~
+	rm -f mac/*~
 	rm -f mgw/*~
 	rm -f lnx/*~
 	rm -f ../include/*~
@@ -26,6 +30,8 @@ distclean:
 	rm -f ../include/win/*~
 	rm -f ../include/os2/*~
 	rm -f ../include/tos/*~
+	rm -f ../include/ami/*~
+	rm -f ../include/mac/*~
 	rm -f ../include/mgw/*~
 	rm -f ../include/lnx/*~
 

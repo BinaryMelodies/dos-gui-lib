@@ -1,0 +1,24 @@
+
+#### Makefile for Apple Macintosh (PowerPC)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+VERSION=-ppc
+PLATFORM=mac
+EXESFX=
+LNKSFX=$(EXESFX)
+GCC=powerpc-apple-macos-gcc
+LD=powerpc-apple-macos-gcc
+CFLAGS=-I$(INCDIR) -I$(INCDIR)/$(PLATFORM)
+LDFLAGS=-L$(BINDIR)/lib/$(PLATFORM) -ldtkppc
+LIBS=$(BINDIR)/lib/$(PLATFORM)/libdtkppc.a
+define postprocess
+Rez /Retro68-build/toolchain/RIncludes/RetroPPCAPPL.r -DCFRAG_NAME="\"appl\"" -t "APPL" -c "????" --data $@ -o $@
+Rez -t "APPL" -c "????" --copy $@ --data $@ -o $(dir $@)/%$(notdir $@)
+endef
+
+include mfs/Makefile.gnu
+include Makefile.main
+

@@ -1,0 +1,24 @@
+
+#### Makefile for Apple Macintosh (PowerPC)
+
+BINDIR=../../../bin
+OBJDIR=../../../obj
+INCDIR=../../include
+
+VERSION=-carbon
+PLATFORM=mac
+EXESFX=
+LNKSFX=$(EXESFX)
+GCC=powerpc-apple-macos-gcc
+LD=powerpc-apple-macos-gcc
+CFLAGS=-I$(INCDIR) -I$(INCDIR)/$(PLATFORM) -carbon -DTARGET_API_MAC_CARBON=1
+LDFLAGS=-L$(BINDIR)/lib/$(PLATFORM) -ldtkcarbon -carbon
+LIBS=$(BINDIR)/lib/$(PLATFORM)/libdtkcarbon.a
+define postprocess
+Rez /Retro68-build/toolchain/RIncludes/RetroCarbonAPPL.r -DCFRAG_NAME="\"appl\"" -t "APPL" -c "????" --data $@ -o $@ -DTARGET_API_MAC_CARBON=1
+Rez -t "APPL" -c "????" --copy $@ --data $@ -o $(dir $@)/%$(notdir $@)
+endef
+
+include mfs/Makefile.gnu
+include Makefile.main
+

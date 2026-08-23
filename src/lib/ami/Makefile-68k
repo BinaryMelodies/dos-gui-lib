@@ -1,0 +1,11 @@
+
+# Makefile for Commodore Amiga (68K)
+
+PLATFORM=ami
+LIBSUFFIX=68k
+GCC=m68k-amigaos-gcc
+CFLAGS=
+PREFIX=m68k-amigaos-
+
+include ../Makefile.template
+

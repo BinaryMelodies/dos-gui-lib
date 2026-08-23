@@ -8,4 +8,5 @@ $(OBJDIR)/002/$(PLATFORM)/%$(VERSION)$(OBJSFX): %.c
 $(BINDIR)/$(PLATFORM)/002$(VERSION)$(LNKSFX): $(OBJDIR)/002/$(PLATFORM)/main$(VERSION)$(OBJSFX) $(LIBS)
 	mkdir -p `dirname $@`
 	$(LD) $< $(LDOUT) $@ $(LDFLAGS)
+	$(postprocess)
 
