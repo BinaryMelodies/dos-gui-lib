@@ -1014,7 +1014,7 @@ void gui_window_redraw(GuiWindow_t window)
 	gui_widgets_redraw(window, gui_obtain_widgets(window)->objects);
 }
 
-GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
+void gui_window_begin_draw(GuiWindow_t window, GuiDrawContext_t * draw_context)
 {
 	GuiRectangle_t client_area = gui_window_get_client_area(window);
 	WORD rect[4];
@@ -1028,7 +1028,7 @@ GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
 	rect[3] = client_area.y + client_area.h - 1;
 	vs_clip(vdi_handle, TRUE, rect);
 
-	return window;
+	*draw_context = window;
 }
 
 void gui_window_end_draw(GuiDrawContext_t * draw_context)

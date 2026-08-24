@@ -502,18 +502,15 @@ void gui_window_redraw(GuiWindow_t window)
 	WinUpdateWindow(window);
 }
 
-GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
+void gui_window_begin_draw(GuiWindow_t window, GuiDrawContext_t * draw_context)
 {
-	GuiDrawContext_t draw_context;
 	RECTL rcl;
 
-	draw_context.hps = WinBeginPaint(window, (HPS)0, NULL);
-//	GpiErase(draw_context.hps);
+	draw_context->hps = WinBeginPaint(window, (HPS)0, NULL);
+//	GpiErase(draw_context->hps);
 
 	WinQueryWindowRect(window, &rcl);
-	draw_context.window_height = rcl.yTop;
-
-	return draw_context;
+	draw_context->window_height = rcl.yTop;
 }
 
 void gui_window_end_draw(GuiDrawContext_t * draw_context)

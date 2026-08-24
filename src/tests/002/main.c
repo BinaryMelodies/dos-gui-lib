@@ -25,8 +25,10 @@ char message_buffer[256] = "Brave new world!";
 
 static bool far _callback_show(GuiWindow_t window)
 {
-	GuiDrawContext_t draw_context = gui_window_begin_draw(window);
-	GuiRectangle_t client_area = gui_window_get_client_area(window);
+	GuiDrawContext_t draw_context;
+	GuiRectangle_t client_area;
+	gui_window_begin_draw(window, &draw_context);
+	client_area = gui_window_get_client_area(window);
 
 	gui_set_color_black(&draw_context);
 	gui_fill_rectangle(&draw_context, 0, 0, client_area.w, client_area.h);

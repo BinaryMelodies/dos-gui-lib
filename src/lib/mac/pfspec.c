@@ -263,21 +263,21 @@ GuiRectangle_t gui_window_get_client_area(GuiWindow_t window)
 
 void gui_window_redraw(GuiWindow_t window)
 {
-#if !TARGET_API_MAC_CARBON // TODO
+#if !TARGET_API_MAC_CARBON
 	WindowPtr savedPort;
 	GetPort(&savedPort);
 	SetPort(window);
 	InvalRect(&window->portRect);
 	SetPort(savedPort);
+#else
+	// TODO
 #endif
 }
 
-GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
+void gui_window_begin_draw(GuiWindow_t window, GuiDrawContext_t * draw_context)
 {
-	GuiDrawContext_t context;
-
 	BeginUpdate(window);
-	GetPort(&context.savedPort);
+	GetPort(&draw_context->savedPort);
 	SetPort(window);
 
 /*
@@ -286,14 +286,12 @@ GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
 	DrawGrowIcon(window);
 */
 
-	context.window = window;
-	context.font = 0;
+	draw_context->window = window;
+	draw_context->font = 0;
 
-	TextFont(context.font);
+	TextFont(draw_context->font);
 	TextMode(srcCopy);
 	TextSize(12);
-
-	return context;
 }
 
 void gui_window_end_draw(GuiDrawContext_t * draw_context)

@@ -686,25 +686,22 @@ void gui_window_redraw(GuiWindow_t window)
 	UpdateWindow(window);
 }
 
-GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
+void gui_window_begin_draw(GuiWindow_t window, GuiDrawContext_t * draw_context)
 {
-	GuiDrawContext_t draw_context;
-	BeginPaint(window, &draw_context.ps);
+	BeginPaint(window, &draw_context->ps);
 
-	draw_context.hWnd = window;
-	draw_context.hdc = GetDC(window);
-	draw_context.brush = GetStockObject(BLACK_BRUSH);
+	draw_context->hWnd = window;
+	draw_context->hdc = GetDC(window);
+	draw_context->brush = GetStockObject(BLACK_BRUSH);
 
 #if __I86__ && WINDOWS_TARGET_VERSION < 2
 	if(_SetTextAlign)
 	{
-		_SetTextAlign(draw_context.hdc, TA_BOTTOM);
+		_SetTextAlign(draw_context->hdc, TA_BOTTOM);
 	}
 #else
-	SetTextAlign(draw_context.hdc, TA_BOTTOM);
+	SetTextAlign(draw_context->hdc, TA_BOTTOM);
 #endif
-
-	return draw_context;
 }
 
 void gui_window_end_draw(GuiDrawContext_t * draw_context)

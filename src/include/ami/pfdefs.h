@@ -6,10 +6,16 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/intuition.h>
+#include <proto/graphics.h>
+#include <graphics/rpattr.h>
 
 typedef struct Window * GuiWindow_t;
 
-typedef struct { /* TODO */ } GuiDrawContext_t;
+typedef struct
+{
+	struct Window * window;
+	struct RastPort * rastPort;
+} GuiDrawContext_t;
 
 typedef struct { /* TODO */ } GuiKeyEvent_t;
 

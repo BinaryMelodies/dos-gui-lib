@@ -39,7 +39,7 @@ GuiRectangle_t gui_window_get_client_area(GuiWindow_t window);
 /** Instructs the GUI to make the window redraw its contents, window drawing routines should only appear in the redraw callback **/
 void gui_window_redraw(GuiWindow_t window);
 /** Informs the GUI that the window is currently being drawn to, to be called within the redraw callback **/
-GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window);
+void gui_window_begin_draw(GuiWindow_t window, GuiDrawContext_t * draw_context);
 /** Informs the GUI that the window has finished being drawn to, to be called within the redraw callback **/
 void gui_window_end_draw(GuiDrawContext_t * draw_context);
 

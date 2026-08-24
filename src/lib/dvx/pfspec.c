@@ -1157,25 +1157,22 @@ void gui_window_redraw(GuiWindow_t window)
 	_window_redraw(window);
 }
 
-GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
+void gui_window_begin_draw(GuiWindow_t window, GuiDrawContext_t * draw_context)
 {
-	GuiDrawContext_t draw_context;
 	uint32_t values[3];
 
-	draw_context.window = window;
+	draw_context->window = window;
 
-	draw_context.current_font = xcb_generate_id(connection);
-	xcb_open_font(connection, draw_context.current_font, sizeof "7x13" - 1, "7x13");
+	draw_context->current_font = xcb_generate_id(connection);
+	xcb_open_font(connection, draw_context->current_font, sizeof "7x13" - 1, "7x13");
 
 	// create GC
 
-	draw_context.graphics_context = xcb_generate_id(connection);
+	draw_context->graphics_context = xcb_generate_id(connection);
 	values[0] = screen->black_pixel;
 	values[1] = screen->white_pixel;
-	values[2] = draw_context.current_font;
-	xcb_create_gc(connection, draw_context.graphics_context, screen->root, XCB_GC_FOREGROUND | XCB_GC_BACKGROUND | XCB_GC_FONT, values);
-
-	return draw_context;
+	values[2] = draw_context->current_font;
+	xcb_create_gc(connection, draw_context->graphics_context, screen->root, XCB_GC_FOREGROUND | XCB_GC_BACKGROUND | XCB_GC_FONT, values);
 }
 
 void gui_window_end_draw(GuiDrawContext_t * draw_context)
