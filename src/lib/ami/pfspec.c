@@ -10,7 +10,7 @@
 # define LIBIF(__name)
 #endif
 
-static bool gui_running;
+static volatile bool gui_running;
 static struct Window * main_window; // TODO
 
 void gui_init(GuiMainParameters_t * parameters)
@@ -28,6 +28,7 @@ int gui_main_loop(void)
 	{
 		struct IntuiMessage * message;
 		LIBIF(IExec) WaitPort(main_window->UserPort);
+		//LIBIF(IExec) Wait(1 << main_window->UserPort->mp_SigBit); // TODO: check?
 		while(message = (struct IntuiMessage *) LIBIF(IExec) GetMsg(main_window->UserPort))
 		{
 			switch(message->Class)
@@ -39,7 +40,13 @@ int gui_main_loop(void)
 				}
 				break;
 			}
+
 			LIBIF(IExec) ReplyMsg((struct Message *) message);
+
+			if(!gui_running)
+			{
+				break;
+			}
 		}
 	}
 }
