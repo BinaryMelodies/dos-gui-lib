@@ -84,7 +84,8 @@ typedef enum
 #define KeyF(__n) ((GuiKey_t)((__n) - 1 + KeyF1))
 
 	/* Special */
-	KeyApple, /* Macintosh only */
+	KeyVendor, /* Macintosh: Apple key, Amiga: Amiga key, Windows: Windows key */
+	KeyRightVendor,
 } GuiKey_t;
 
 typedef struct

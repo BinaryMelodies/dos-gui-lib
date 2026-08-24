@@ -17,7 +17,7 @@ typedef struct
 	struct RastPort * rastPort;
 } GuiDrawContext_t;
 
-typedef struct { /* TODO */ } GuiKeyEvent_t;
+typedef struct IntuiMessage GuiKeyEvent_t;
 
 typedef struct { /* TODO */ } GuiMouseButtonEvent_t;
 

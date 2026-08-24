@@ -46,7 +46,25 @@ int gui_main_loop(void)
 			case IDCMP_REFRESHWINDOW:
 				if(callback_show)
 				{
+					LIBIF(IIntuition) BeginRefresh(main_window); // TODO: it should be up to the callback to invoke this
 					callback_show(main_window);
+					LIBIF(IIntuition) EndRefresh(main_window, true); // TODO: it should be up to the callback to invoke this
+				}
+				break;
+			case IDCMP_RAWKEY:
+				if((message->Code & 0x80) == 0)
+				{
+					if(callback_key_press)
+					{
+						callback_key_press(main_window, *message);
+					}
+				}
+				else
+				{
+					if(callback_key_release)
+					{
+						callback_key_release(main_window, *message);
+					}
 				}
 				break;
 			}
@@ -87,6 +105,10 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 	if(callback_show)
 	{
 		events |= IDCMP_REFRESHWINDOW;
+	}
+	if(callback_key_press || callback_key_release)
+	{
+		events |= IDCMP_RAWKEY;
 	}
 
 	if(x != GUI_WINPOS_DEFAULT) // TODO: max
@@ -171,7 +193,10 @@ GuiRectangle_t gui_window_get_client_area(GuiWindow_t window)
 
 void gui_window_redraw(GuiWindow_t window)
 {
-	// TODO
+	if(callback_show)
+	{
+		callback_show(main_window);
+	}
 }
 
 void gui_window_begin_draw(GuiWindow_t window, GuiDrawContext_t * draw_context)
@@ -238,9 +263,26 @@ void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * 
 	LIBIF(IGraphics) Text(draw_context->rastPort, text, strlen(text));
 }
 
+static const GuiKey_t virtual_codes[256] =
+{
+	'`', '1', '2', '3', '4', '5', '6', '7',
+	'8', '9', '0', '-', '=', '\\', 0, KeyNum0,
+	'q', 'w', 'e', 'r', 't', 'y', 'u', 'i',
+	'o', 'p', '[', ']', 0, KeyNum1, KeyNum2, KeyNum3,
+	'a', 's', 'd', 'f', 'g', 'h', 'j', 'k',
+	'l', ';', '\'', 0, 0 /* unnamed key, UAE maps insert */, KeyNum4, KeyNum5, KeyNum6,
+	0 /* unnamed key */, 'z', 'x', 'c', 'v', 'b', 'n', 'm',
+	',', '.', '/', 0, KeyNumDelete, KeyNum7, KeyNum8, KeyNum9,
+	' ', KeyBackspace, KeyTab, KeyNumEnter, KeyEnter, KeyEscape, KeyDelete, 0,
+	0, 0, KeyNumMinus, 0, KeyUp, KeyDown, KeyRight, KeyLeft,
+	KeyF1, KeyF2, KeyF3, KeyF4, KeyF5, KeyF6, KeyF7, KeyF8,
+	KeyF9, KeyF10, 0 /* Num (, UAE maps home */, 0 /* Num ), UAE maps pgup */, KeyNumSlash, KeyNumAsterisk, KeyNumPlus, 0 /* Help, UAE maps end */,
+	KeyShift, KeyRightShift, KeyCapsLock, KeyControl, KeyAlt, 0, KeyVendor, KeyRightVendor /* UAE maps pgdn */
+};
+
 GuiKey_t gui_get_keycode(GuiKeyEvent_t event)
 {
-	// TODO
+	return virtual_codes[event.Code & 0x7F];
 }
 
 GuiPoint_t gui_get_mouse_button_coordinates(GuiMouseButtonEvent_t event)

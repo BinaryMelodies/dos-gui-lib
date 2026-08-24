@@ -150,7 +150,9 @@ static const char far * key_names[] =
 static bool far _callback_keypress(GuiWindow_t window, GuiKeyEvent_t key_event)
 {
 	if(gui_get_keycode(key_event) == KeyEscape)
-		exit(1);
+	{
+		gui_terminate_main_loop();
+	}
 
 	return true;
 }

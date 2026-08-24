@@ -372,7 +372,7 @@ static const GuiKey_t virtual_codes[256] =
 	'=', '9', '7', '-', '8', '0', ']', 'o',
 	'u', '[', 'i', 'p', KeyEnter, 'l', 'j', '\\',
 	'k', ';', '\\', ',', '/', 'n', 'm', '.',
-	KeyTab, ' ', '`', KeyBackspace, 0, KeyEscape, KeyCapsLock /* ? */, KeyApple,
+	KeyTab, ' ', '`', KeyBackspace, 0, KeyEscape, KeyCapsLock /* ? */, KeyVendor,
 	KeyShift, KeyCapsLock, KeyAlt /* option */, KeyControl /* control */, KeyRight /* ApplKbd */, KeyDown /* ApplKbd */, KeyUp /* ApplKbd */,
 
 	[0x41] = KeyNumDelete,
