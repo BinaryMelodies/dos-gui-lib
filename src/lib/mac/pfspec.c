@@ -24,7 +24,8 @@ enum
 	kItemQuit = 1,
 };
 
-static bool gui_running;
+static bool color_qd_available;
+static volatile bool gui_running;
 
 static void doMenuCommand(long menuResult)
 {
@@ -53,6 +54,8 @@ static void doMenuCommand(long menuResult)
 
 void gui_init(GuiMainParameters_t * parameters)
 {
+	LONGINT response;
+
 #if !TARGET_API_MAC_CARBON
 	InitGraf(&qd.thePort);
 	InitFonts();
@@ -62,6 +65,17 @@ void gui_init(GuiMainParameters_t * parameters)
 	InitDialogs(NULL);
 #endif
 	InitCursor();
+
+	if(Gestalt(gestaltQuickdrawVersion, &response) == noErr)
+	{
+		// TODO: Inside Macintosh seems to recommend checking gestalt32BitQD13 instead and not relying on the gestaltHasColor bit, calling it unreliable
+		if((response & 0xFFFF) >= gestalt8BitQD)
+		{
+			color_qd_available =
+				Gestalt(gestaltQuickdrawFeatures, &response) == noErr
+				&& (response & (1 << gestaltHasColor)) != 0;
+		}
+	}
 
 	// create default menus programmatically
 	MenuHandle menuAppleHandle = NewMenu(kMenuApple, "\p\x14");
@@ -155,7 +169,7 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 	WindowRef window;
 
 	windowRect.left = x;
-	windowRect.top = y;
+	windowRect.top = GetMBarHeight() + y;
 	windowRect.right = x + w;
 	windowRect.bottom = y + h;
 
@@ -163,16 +177,30 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 	pascal_title[0] = strlen(window_title);
 	memcpy(&pascal_title[1], window_title, strlen(window_title));
 
-	// TODO: check if color QD is available
-	window = NewCWindow(
-		NULL,
-		&windowRect,
-		pascal_title,
-		true,
-		zoomDocProc,
-		(WindowPtr) -1,
-		true,
-		0);
+	if(color_qd_available)
+	{
+		window = NewCWindow(
+			NULL,
+			&windowRect,
+			pascal_title,
+			true,
+			zoomDocProc,
+			(WindowPtr) -1,
+			true,
+			0);
+	}
+	else
+	{
+		window = NewWindow(
+			NULL,
+			&windowRect,
+			pascal_title,
+			true,
+			zoomDocProc,
+			(WindowPtr) -1,
+			true,
+			0);
+	}
 	free(pascal_title);
 
 	return window;

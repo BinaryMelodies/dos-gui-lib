@@ -200,7 +200,7 @@ int gui_main(GuiMainParameters_t parameters)
 	gui_register_callback_show(_callback_show);
 	gui_register_callback_key_press(_callback_keypress);
 
-	window = gui_window_create(WINDOW_TITLE, 10, 60, 300, 150, GUI_WINDOW_STATE_DEFAULT);
+	window = gui_window_create(WINDOW_TITLE, 10, 20, 300, 150, GUI_WINDOW_STATE_DEFAULT);
 
 	result = gui_main_loop();
 
