@@ -14,11 +14,11 @@ typedef struct
 	INTEGER font;
 } GuiDrawContext_t;
 
-typedef struct { /* TODO */ } GuiKeyEvent_t;
+typedef struct EventRecord GuiKeyEvent_t;
 
-typedef struct { /* TODO */ } GuiMouseButtonEvent_t;
+typedef struct EventRecord GuiMouseButtonEvent_t;
 
-typedef struct { /* TODO */ } GuiMouseMoveEvent_t;
+typedef struct EventRecord GuiMouseMoveEvent_t;
 
 typedef struct { } GuiMainParameters_t;
 

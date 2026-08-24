@@ -153,7 +153,26 @@ int gui_main_loop(void)
 				break;
 			case keyDown:
 			case autoKey:
-				// TODO
+				if((event.modifiers & cmdKey) != 0)
+				{
+					if(event.what == keyDown)
+					{
+						doMenuCommand(MenuKey(event.message & charCodeMask));
+					}
+				}
+				else
+				{
+					if(callback_key_press)
+					{
+						callback_key_press(FrontWindow(), event);
+					}
+				}
+				break;
+			case keyUp:
+				if(callback_key_release)
+				{
+					callback_key_release(FrontWindow(), event);
+				}
 				break;
 			case activateEvt:
 				// TODO
@@ -244,7 +263,13 @@ GuiRectangle_t gui_window_get_client_area(GuiWindow_t window)
 
 void gui_window_redraw(GuiWindow_t window)
 {
-	// TODO
+#if !TARGET_API_MAC_CARBON // TODO
+	WindowPtr savedPort;
+	GetPort(&savedPort);
+	SetPort(window);
+	InvalRect(&window->portRect);
+	SetPort(savedPort);
+#endif
 }
 
 GuiDrawContext_t gui_window_begin_draw(GuiWindow_t window)
@@ -337,27 +362,70 @@ int gui_get_font_height(GuiDrawContext_t * draw_context)
 
 void gui_write_text(GuiDrawContext_t * draw_context, int x, int y, const char * text)
 {
-#if 0
-	size_t text_length = strlen(text);
-	static unsigned char pascal_text[256];
-
-
-	while(text_length != 0)
-	{
-		pascal_text[0] = text_length > 255 ? 255 : text_length;
-		memcpy(&pascal_text[1], text, pascal_text[0]);
-		text += pascal_text[0];
-		DrawString(pascal_text);
-	}
-#endif
-
 	MoveTo(x, y);
 	DrawText((char *)text, 0, strlen(text));
 }
 
+static const GuiKey_t virtual_codes[256] =
+{
+	'a', 's', 'd', 'f', 'h', 'g', 'z', 'x',
+	'c', 'v', '`' /* ? */, 'b', 'q', 'w', 'e', 'r',
+	'y', 't', '1', '2', '3', '4', '6', '5',
+	'=', '9', '7', '-', '8', '0', ']', 'o',
+	'u', '[', 'i', 'p', KeyEnter, 'l', 'j', '\\',
+	'k', ';', '\\', ',', '/', 'n', 'm', '.',
+	KeyTab, ' ', '`', KeyBackspace, 0, KeyEscape, KeyCapsLock /* ? */, KeyApple,
+	KeyShift, KeyCapsLock, KeyAlt /* option */, KeyControl /* control */, KeyRight /* ApplKbd */, KeyDown /* ApplKbd */, KeyUp /* ApplKbd */,
+
+	[0x41] = KeyNumDelete,
+	[0x43] = KeyNumAsterisk,
+	[0x45] = KeyNumPlus,
+	[0x47] = KeyNumLock,
+	[0x4B] = KeyNumSlash,
+	[0x4C] = KeyNumEnter,
+	[0x4E] = KeyNumMinus,
+	//[0x51] = KeyNumEqual,
+	[0x52] = KeyNum0,
+	[0x53] = KeyNum1,
+	[0x54] = KeyNum2,
+	[0x55] = KeyNum3,
+	[0x56] = KeyNum4,
+	[0x57] = KeyNum5,
+	[0x58] = KeyNum6,
+	[0x59] = KeyNum7,
+	[0x5B] = KeyNum8,
+	[0x5C] = KeyNum9,
+
+	[0x60] = KeyF5,
+	[0x61] = KeyF6,
+	[0x62] = KeyF7,
+	[0x63] = KeyF3,
+	[0x64] = KeyF8,
+	[0x65] = KeyF9,
+	[0x67] = KeyF11,
+	[0x69] = KeyPrintScreen, // F13
+	[0x6B] = KeyScrollLock, // F14
+	[0x6D] = KeyF10,
+	[0x6F] = KeyF12,
+	[0x71] = KeyPause, // F15
+	[0x72] = KeyInsert,
+	[0x73] = KeyHome,
+	[0x74] = KeyPageUp,
+	[0x75] = KeyDelete,
+	[0x76] = KeyF4,
+	[0x77] = KeyEnd,
+	[0x78] = KeyF2,
+	[0x79] = KeyPageDown,
+	[0x7A] = KeyF1,
+	[0x7B] = KeyLeft,
+	[0x7C] = KeyRight,
+	[0x7D] = KeyDown,
+	[0x7E] = KeyUp,
+};
+
 GuiKey_t gui_get_keycode(GuiKeyEvent_t event)
 {
-	// TODO
+	return virtual_codes[(event.message & keyCodeMask) >> 8];
 }
 
 GuiPoint_t gui_get_mouse_button_coordinates(GuiMouseButtonEvent_t event)

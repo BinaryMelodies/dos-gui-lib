@@ -82,6 +82,9 @@ typedef enum
 	KeyNumLock,
 	KeyScrollLock,
 #define KeyF(__n) ((GuiKey_t)((__n) - 1 + KeyF1))
+
+	/* Special */
+	KeyApple, /* Macintosh only */
 } GuiKey_t;
 
 typedef struct
