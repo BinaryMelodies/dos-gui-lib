@@ -188,12 +188,22 @@ int gui_main(GuiMainParameters_t parameters)
 	gui_message_box(GUINAME
 #if __I86__
 	" (16-bit)"
-#elif __386__
+#elif __386__ || __i386__
 # if __WINDOWS__ && !__NT__
 	" (386)"
 # else
 	" (32-bit)"
 # endif
+#elif __amd64__
+	" (64-bit)"
+#elif __m68k__
+	" (68K)"
+#elif __ppc__ || __powerpc__
+#if TARGET_API_MAC_CARBON
+	" (Carbon)"
+#else
+	" (PowerPC)"
+#endif
 #endif
 	, "Greetings!", GUI_MSGBOX_BUTTON(YES) | GUI_MSGBOX_BUTTON(NO) | GUI_MSGBOX_BUTTON(CANCEL) | GUI_MSGBOX_BUTTON(HELP), GUI_MSGBOX_BUTTON_NO, GUI_MSGBOX_ICON_WARNING);
 
