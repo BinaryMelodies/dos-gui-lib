@@ -7,7 +7,12 @@
 
 typedef WindowRef GuiWindow_t;
 
-typedef struct { /* TODO */ } GuiDrawContext_t;
+typedef struct
+{
+	WindowRef window;
+	GrafPtr savedPort;
+	INTEGER font;
+} GuiDrawContext_t;
 
 typedef struct { /* TODO */ } GuiKeyEvent_t;
 
