@@ -131,6 +131,7 @@ int gui_main_loop(void)
 						DragWindow(thisWindow, event.where, &screenBits.bounds);
 					}
 #endif
+					break;
 				case inGrow:
 					// TODO
 					break;
@@ -278,7 +279,7 @@ void gui_window_redraw(GuiWindow_t window)
 	InvalRect(&window->portRect);
 	SetPort(savedPort);
 #else
-	// TODO
+	InvalWindowRect(window, &window->portRect);
 #endif
 }
 
