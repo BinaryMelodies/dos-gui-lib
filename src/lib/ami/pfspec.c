@@ -3,6 +3,7 @@
 #include "api.h"
 #define _COMPILE_LIBRARY
 #include "internal.h"
+#include <stdlib.h>
 #include <string.h>
 
 #if __amigaos4__
@@ -12,7 +13,11 @@
 #endif
 
 static volatile bool gui_running;
-static struct Window * main_window; // TODO
+// a collection of all opened windows
+static size_t window_count;
+static struct Window ** windows;
+// the signals (one bit for each window) that needs to be waited for
+static uint32_t signals;
 
 void gui_init(GuiMainParameters_t * parameters)
 {
@@ -28,52 +33,59 @@ int gui_main_loop(void)
 	while(gui_running)
 	{
 		struct IntuiMessage * message;
-		LIBIF(IExec) WaitPort(main_window->UserPort);
-		//LIBIF(IExec) Wait(1 << main_window->UserPort->mp_SigBit); // TODO: check?
-		while(message = (struct IntuiMessage *) LIBIF(IExec) GetMsg(main_window->UserPort))
+		size_t window_index = 0;
+
+		LIBIF(IExec) Wait(signals);
+
+		for(window_index = 0; window_index < window_count; window_index++)
 		{
-			switch(message->Class)
-			{
-			case IDCMP_CLOSEWINDOW:
-				if(callback_close)
-				{
-					callback_close(main_window);
-				}
-				break;
-			//case IDCMP_NEWSIZE:
-			//case IDCMP_CHANGEWINDOW:
-			//case IDCMP_ACTIVEWINDOW:
-			case IDCMP_REFRESHWINDOW:
-				if(callback_show)
-				{
-					LIBIF(IIntuition) BeginRefresh(main_window); // TODO: it should be up to the callback to invoke this
-					callback_show(main_window);
-					LIBIF(IIntuition) EndRefresh(main_window, true); // TODO: it should be up to the callback to invoke this
-				}
-				break;
-			case IDCMP_RAWKEY:
-				if((message->Code & 0x80) == 0)
-				{
-					if(callback_key_press)
-					{
-						callback_key_press(main_window, *message);
-					}
-				}
-				else
-				{
-					if(callback_key_release)
-					{
-						callback_key_release(main_window, *message);
-					}
-				}
-				break;
-			}
+			struct Window * window = windows[window_index];
 
-			LIBIF(IExec) ReplyMsg((struct Message *) message);
-
-			if(!gui_running)
+			while(message = (struct IntuiMessage *) LIBIF(IExec) GetMsg(window->UserPort))
 			{
-				break;
+				switch(message->Class)
+				{
+				case IDCMP_CLOSEWINDOW:
+					if(callback_close)
+					{
+						callback_close(window);
+					}
+					break;
+				//case IDCMP_NEWSIZE:
+				//case IDCMP_CHANGEWINDOW:
+				//case IDCMP_ACTIVEWINDOW:
+				case IDCMP_REFRESHWINDOW:
+					if(callback_show)
+					{
+						LIBIF(IIntuition) BeginRefresh(window); // TODO: it should be up to the callback to invoke this
+						callback_show(window);
+						LIBIF(IIntuition) EndRefresh(window, true); // TODO: it should be up to the callback to invoke this
+					}
+					break;
+				case IDCMP_RAWKEY:
+					if((message->Code & 0x80) == 0)
+					{
+						if(callback_key_press)
+						{
+							callback_key_press(window, *message);
+						}
+					}
+					else
+					{
+						if(callback_key_release)
+						{
+							callback_key_release(window, *message);
+						}
+					}
+					break;
+				}
+
+				LIBIF(IExec) ReplyMsg((struct Message *) message);
+
+				if(!gui_running)
+				{
+					break;
+				}
 			}
 		}
 	}
@@ -157,16 +169,17 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 	tags[tag_index] = TAG_END;
 
 	window = LIBIF(IIntuition) OpenWindowTagList(NULL, (struct TagItem *) &tags);
-	// TODO: do not single out the first window
-	if(main_window == NULL)
-	{
-		main_window = window;
-	}
 
 	if(callback_show)
 	{
 		callback_show(window);
 	}
+
+	signals |= 1 << window->UserPort->mp_SigBit;
+
+	window_count += 1;
+	windows = windows ? realloc(windows, sizeof(struct Window *) * window_count) : malloc(sizeof(struct Window *) * window_count);
+	windows[window_count - 1] = window;
 
 	return window;
 }
@@ -174,10 +187,42 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 void gui_window_show(GuiWindow_t window, GuiWindowState_t state, GuiWindowStateAction_t action)
 {
 	// TODO
+	if(action == GUI_WINDOW_STATE_ACTIVATE)
+	{
+		LIBIF(IIntuition) ActivateWindow(window);
+	}
 }
 
 void gui_window_destroy(GuiWindow_t window)
 {
+	size_t window_index = 0;
+	signals = 0;
+	for(window_index = 0; window_index < window_count; window_index ++)
+	{
+		if(window == windows[window_index])
+		{
+			if(window_index != window_count - 1)
+			{
+				memmove(&windows[window_index], &windows[window_index + 1], sizeof(struct Window *) * (window_count - window_index + 1));
+			}
+			window_count --;
+			if(window_count == 0)
+			{
+				free(windows);
+				windows = NULL;
+			}
+			else
+			{
+				windows = realloc(windows, sizeof(struct Window *) * window_count);
+			}
+			window_index --;
+		}
+		else
+		{
+			signals |= 1 << windows[window_index]->UserPort->mp_SigBit;
+		}
+	}
+
 	LIBIF(IIntuition) CloseWindow(window);
 }
 
@@ -195,7 +240,7 @@ void gui_window_redraw(GuiWindow_t window)
 {
 	if(callback_show)
 	{
-		callback_show(main_window);
+		callback_show(window);
 	}
 }
 

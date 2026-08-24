@@ -24,11 +24,22 @@
 char message_buffer[256] = "Brave new world!";
 
 static size_t window_count = 2;
+static bool window1_alive = true;
 static GuiWindow_t window1;
+static bool window2_alive = true;
 static GuiWindow_t window2;
 
 static bool far _callback_close(GuiWindow_t window)
 {
+	if(window == window1)
+	{
+		window1_alive = false;
+	}
+	else if(window == window2)
+	{
+		window2_alive = false;
+	}
+
 	gui_window_destroy(window);
 	if(--window_count == 0)
 	{
@@ -81,8 +92,13 @@ int gui_main(GuiMainParameters_t parameters)
 
 	result = gui_main_loop();
 
-	gui_window_destroy(window1);
-	gui_window_destroy(window2);
+	if(window_count != 0)
+	{
+		if(window1_alive)
+			gui_window_destroy(window1);
+		if(window2_alive)
+			gui_window_destroy(window2);
+	}
 
 	gui_terminate();
 

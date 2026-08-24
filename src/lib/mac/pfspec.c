@@ -117,6 +117,10 @@ int gui_main_loop(void)
 					SystemClick(&event, thisWindow);
 					break;
 #endif
+				case inContent:
+					SelectWindow(thisWindow);
+					// TODO: callback
+					break;
 				case inDrag:
 #if !TARGET_API_MAC_CARBON
 					DragWindow(thisWindow, event.where, &qd.screenBits.bounds);
@@ -244,6 +248,10 @@ GuiWindow_t gui_window_create(const char * window_title, int x, int y, int w, in
 void gui_window_show(GuiWindow_t window, GuiWindowState_t state, GuiWindowStateAction_t action)
 {
 	// TODO
+	if(action == GUI_WINDOW_STATE_ACTIVATE)
+	{
+		SelectWindow(window);
+	}
 }
 
 void gui_window_destroy(GuiWindow_t window)
